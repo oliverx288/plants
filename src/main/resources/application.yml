@@ -1,0 +1,36 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: savia
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:savia}
+    username: ${DB_USER:savia}
+    password: ${DB_PASSWORD:savia}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 8MB
+      max-request-size: 8MB
+  web:
+    resources:
+      add-mappings: true
+
+app:
+  upload-dir: ${UPLOAD_DIR:uploads}
+
+logging:
+  level:
+    com.savia: INFO

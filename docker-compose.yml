@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: savia
+      POSTGRES_USER: savia
+      POSTGRES_PASSWORD: savia
+    volumes:
+      - savia-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U savia -d savia"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: savia
+      DB_USER: savia
+      DB_PASSWORD: savia
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - savia-uploads:/app/uploads
+    ports:
+      - "8080:8080"
+
+volumes:
+  savia-db:
+  savia-uploads:

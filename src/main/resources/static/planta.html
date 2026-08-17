@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Savia · Pasaporte de planta</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22 font-size=%2280%22><text y=%2278%22>🪴</text></svg>">
+<script>
+  (function () {
+    var guardado = localStorage.getItem("savia-tema");
+    if (guardado) document.documentElement.setAttribute("data-theme", guardado);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="preload" as="style"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20C4 11 10 4 20 4c0 10-7 16-16 16Z"/><path d="M4 20c3-6 7-9 12-11"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.4 4.4l1.7 1.7M17.9 17.9l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.4 19.6l1.7-1.7M17.9 6.1l1.7-1.7"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9 7V5h6v2m-9 0 1 13h8l1-13"/></symbol>
+  <symbol id="i-nfc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8a5 5 0 0 1 0 8M4.5 4.5a10 10 0 0 1 0 15"/><rect x="12" y="10" width="8" height="6" rx="1.4"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="1.6"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-9.5-9C.8 7.4 3 4 6.5 4 9 4 11 6 12 7.3 13 6 15 4 17.5 4 21 4 23.2 7.4 21.5 11c-2.5 4.6-9.5 9-9.5 9Z"/></symbol>
+</svg>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="wordmark" href="/"><svg><use href="#i-leaf"/></svg>Savia</a>
+    <div class="topbar-actions">
+      <button class="icon-btn" data-toggle-tema aria-label="Cambiar tema claro/oscuro">
+        <svg><use href="#i-sun"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<main class="shell">
+  <a class="volver" href="/"><svg><use href="#i-back"/></svg>Volver a la colección</a>
+
+  <div id="contenido-planta">
+    <div class="skeleton" style="aspect-ratio:16/10; border-radius:22px;"></div>
+  </div>
+
+  <div id="secciones-planta" class="oculto">
+
+    <section class="seccion">
+      <div class="seccion-titulo"><h2>Información</h2></div>
+      <div class="info-grid" id="info-grid"></div>
+      <p class="descripcion-planta oculto" id="planta-descripcion"></p>
+      <div class="nfc-panel">
+        <svg><use href="#i-nfc"/></svg>
+        <span class="url mono" id="nfc-url"></span>
+        <button class="btn btn-ghost btn-sm" id="btn-copiar-nfc"><svg><use href="#i-copy"/></svg>Copiar URL</button>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <div class="seccion-titulo acciones-cabecera">
+        <h2>Historial de cuidados</h2>
+        <button class="btn btn-primary" id="btn-registrar"><svg><use href="#i-plus"/></svg>Registrar cuidado</button>
+      </div>
+      <ul class="timeline" id="historial-lista"></ul>
+      <p class="descripcion-planta" id="historial-vacio" style="display:none;">Todavía no hay ningún cuidado registrado.</p>
+    </section>
+
+    <section class="seccion oculto" id="seccion-diario">
+      <div class="seccion-titulo"><h2>Diario de crecimiento</h2></div>
+      <div class="diario-lista" id="diario-lista"></div>
+    </section>
+
+    <section class="seccion">
+      <div class="seccion-titulo"><h2>Estadísticas</h2></div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="chart-card">
+        <span class="eyebrow">Cuidados registrados por mes</span>
+        <div id="grafico-evolucion"></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<button class="fab-registrar" id="fab-registrar"><svg><use href="#i-plus"/></svg>Registrar cuidado</button>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Registrar cuidado</h2>
+      <button class="icon-btn" id="btn-cerrar-modal" aria-label="Cerrar"><svg><use href="#i-close"/></svg></button>
+    </div>
+    <form id="form-accion">
+      <div class="campo">
+        <label>Tipo de cuidado</label>
+        <div class="grupo-tipo" id="grupo-tipo"></div>
+      </div>
+      <div class="campo">
+        <label for="campo-fecha">Fecha y hora</label>
+        <input type="datetime-local" id="campo-fecha" name="fecha" required>
+      </div>
+      <div class="campo oculto" id="campo-foto-wrap">
+        <label>Fotografía</label>
+        <label class="foto-upload" id="foto-upload-label">
+          <span id="foto-upload-texto">Toca para elegir una imagen</span>
+          <input type="file" id="campo-foto" accept="image/png,image/jpeg,image/webp,image/gif">
+        </label>
+      </div>
+      <div class="campo oculto" id="campo-ubicacion-wrap">
+        <label for="campo-ubicacion">Nueva ubicación</label>
+        <input type="text" id="campo-ubicacion" placeholder="p. ej. Salón, junto a la ventana">
+      </div>
+      <div class="campo">
+        <label for="campo-notas">Notas <span class="ayuda">(opcional)</span></label>
+        <textarea id="campo-notas" placeholder="Cualquier detalle que quieras recordar…"></textarea>
+      </div>
+      <p class="form-error oculto" id="form-accion-error"></p>
+      <div class="form-footer">
+        <button type="button" class="btn btn-ghost" id="btn-cancelar-modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary btn-block" id="btn-guardar-accion">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script type="module" src="/js/planta.js"></script>
+</body>
+</html>

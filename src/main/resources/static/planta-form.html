@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Savia · Añadir planta</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22 font-size=%2280%22><text y=%2278%22>🪴</text></svg>">
+<script>
+  (function () {
+    var guardado = localStorage.getItem("savia-tema");
+    if (guardado) document.documentElement.setAttribute("data-theme", guardado);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="preload" as="style"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20C4 11 10 4 20 4c0 10-7 16-16 16Z"/><path d="M4 20c3-6 7-9 12-11"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.4 4.4l1.7 1.7M17.9 17.9l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.4 19.6l1.7-1.7M17.9 6.1l1.7-1.7"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></symbol>
+  <symbol id="i-nfc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8a5 5 0 0 1 0 8M4.5 4.5a10 10 0 0 1 0 15"/><rect x="12" y="10" width="8" height="6" rx="1.4"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="1.6"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></symbol>
+</svg>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="wordmark" href="/"><svg><use href="#i-leaf"/></svg>Savia</a>
+    <div class="topbar-actions">
+      <button class="icon-btn" data-toggle-tema aria-label="Cambiar tema claro/oscuro">
+        <svg><use href="#i-sun"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<main class="shell" style="max-width:720px;">
+  <a class="volver" id="enlace-volver" href="/"><svg><use href="#i-back"/></svg>Volver</a>
+
+  <section class="hero-strip" style="padding-top:12px;">
+    <div>
+      <h1 id="titulo-formulario">Nueva planta</h1>
+      <p class="lead" id="subtitulo-formulario">Añade su identidad y sus necesidades de cuidado.</p>
+    </div>
+  </section>
+
+  <form id="form-planta">
+    <div class="campo">
+      <label>Fotografía principal</label>
+      <label class="foto-upload" id="foto-upload-label">
+        <span>Toca para elegir una imagen</span>
+        <input type="file" id="campo-foto" accept="image/png,image/jpeg,image/webp,image/gif">
+      </label>
+    </div>
+
+    <div class="campo">
+      <label for="campo-nombre">Nombre</label>
+      <input type="text" id="campo-nombre" placeholder="p. ej. Lola" required>
+    </div>
+
+    <div class="campo">
+      <label for="campo-especie">Especie</label>
+      <input type="text" id="campo-especie" placeholder="p. ej. Monstera deliciosa">
+    </div>
+
+    <div class="campo">
+      <label for="campo-descripcion">Descripción <span class="ayuda">(opcional)</span></label>
+      <textarea id="campo-descripcion" placeholder="Cómo es, qué la hace especial…"></textarea>
+    </div>
+
+    <div class="fila-campos">
+      <div class="campo">
+        <label for="campo-fecha-adopcion">Fecha de adopción</label>
+        <input type="date" id="campo-fecha-adopcion">
+      </div>
+      <div class="campo">
+        <label for="campo-ubicacion">Ubicación</label>
+        <input type="text" id="campo-ubicacion" placeholder="p. ej. Salón">
+      </div>
+    </div>
+
+    <div class="fila-campos">
+      <div class="campo">
+        <label for="campo-luz">Luz necesaria</label>
+        <select id="campo-luz">
+          <option value="">Sin especificar</option>
+          <option value="BAJA">Baja</option>
+          <option value="MEDIA">Media</option>
+          <option value="ALTA">Alta / indirecta intensa</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="campo-frecuencia">Frecuencia de riego (días)</label>
+        <input type="number" id="campo-frecuencia" min="1" placeholder="p. ej. 7">
+      </div>
+    </div>
+
+    <div class="fila-campos">
+      <div class="campo">
+        <label for="campo-humedad">Humedad recomendada</label>
+        <input type="text" id="campo-humedad" placeholder="p. ej. Media-alta">
+      </div>
+      <div class="campo">
+        <label>Temperatura ideal (°C)</label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="number" id="campo-temp-min" placeholder="Mín.">
+          <span class="ayuda">–</span>
+          <input type="number" id="campo-temp-max" placeholder="Máx.">
+        </div>
+      </div>
+    </div>
+
+    <div class="campo">
+      <label for="campo-estado-manual">Estado</label>
+      <select id="campo-estado-manual">
+        <option value="">Automático, según el riego</option>
+        <option value="SALUDABLE">Forzar: Saludable</option>
+        <option value="ATENCION">Forzar: Necesita atención</option>
+        <option value="PROBLEMAS">Forzar: Con problemas</option>
+      </select>
+      <span class="ayuda">Úsalo para casos que el calendario de riego no detecta, como una plaga.</span>
+    </div>
+
+    <div class="nfc-panel oculto" id="nfc-panel-form">
+      <svg><use href="#i-nfc"/></svg>
+      <span class="url mono" id="nfc-url-form"></span>
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-copiar-nfc-form"><svg><use href="#i-copy"/></svg>Copiar</button>
+    </div>
+    <div class="panel-secundario oculto" id="nota-nfc-nueva">
+      <h3>URL NFC</h3>
+      <p>Se generará automáticamente al guardar. Podrás copiarla desde la página de la planta para escribirla en la etiqueta.</p>
+    </div>
+
+    <p class="form-error oculto" id="form-planta-error"></p>
+
+    <div class="form-footer">
+      <button type="button" class="btn btn-ghost" id="btn-cancelar-form">Cancelar</button>
+      <button type="submit" class="btn btn-primary btn-block" id="btn-guardar-planta">Guardar planta</button>
+    </div>
+  </form>
+
+  <button class="btn btn-danger btn-block oculto" id="btn-eliminar-planta" style="margin-top:14px;">Eliminar esta planta</button>
+</main>
+
+<script type="module" src="/js/planta-form.js"></script>
+</body>
+</html>

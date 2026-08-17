@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Savia · Tu colección de plantas</title>
+<meta name="description" content="Pasaporte digital de tus plantas: cuidados, diario de crecimiento y estado, al alcance de una etiqueta NFC.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22 font-size=%2280%22><text y=%2278%22>🪴</text></svg>">
+<script>
+  (function () {
+    var guardado = localStorage.getItem("savia-tema");
+    if (guardado) document.documentElement.setAttribute("data-theme", guardado);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="preload" as="style"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20C4 11 10 4 20 4c0 10-7 16-16 16Z"/><path d="M4 20c3-6 7-9 12-11"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.4 4.4l1.7 1.7M17.9 17.9l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.4 19.6l1.7-1.7M17.9 6.1l1.7-1.7"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/></symbol>
+  <symbol id="i-sprout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9M12 12C12 7 8 6 5 6c0 5 3 7 7 7ZM12 12c0-4 3-5 6-5 0 4-2 6-6 6Z"/></symbol>
+</svg>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="wordmark"><svg><use href="#i-leaf"/></svg>Savia</div>
+    <div class="topbar-actions">
+      <button class="icon-btn" data-toggle-tema aria-label="Cambiar tema claro/oscuro">
+        <svg><use href="#i-sun"/></svg>
+      </button>
+      <a class="btn btn-primary" href="/plantas/nueva"><svg><use href="#i-plus"/></svg>Nueva planta</a>
+    </div>
+  </div>
+</div>
+
+<main class="shell">
+  <section class="hero-strip">
+    <div>
+      <h1>Tu colección</h1>
+      <p class="lead" id="resumen-coleccion">Cargando tus plantas…</p>
+    </div>
+  </section>
+
+  <section class="grid-plantas" id="grid-plantas" aria-live="polite">
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+  </section>
+</main>
+
+<script type="module" src="/js/dashboard.js"></script>
+</body>
+</html>
