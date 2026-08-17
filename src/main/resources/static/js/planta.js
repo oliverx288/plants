@@ -2,10 +2,11 @@ import { apiGet, apiPost, apiDelete, subirImagen } from "./api.js";
 import {
   TIPOS_ACCION, ESTADOS, LUZ,
   formatFecha, formatFechaHora, formatFechaCorta,
-  iconoPlaceholder, escaparHtml, mostrarToast, iniciarTema,
+  iconoPlaceholder, escaparHtml, mostrarToast, iniciarTema, iniciarBarraSesion,
 } from "./utils.js";
 
 iniciarTema();
+iniciarBarraSesion();
 
 const slug = decodeURIComponent(location.pathname.split("/")[2] || "");
 
@@ -26,6 +27,12 @@ function renderHero(p) {
 
   const estadoMeta = ESTADOS[p.estado] ?? ESTADOS.SALUDABLE;
 
+  const accionesHero = p.esPropia ? `
+      <div class="planta-hero-actions">
+        <button class="icon-btn" id="btn-editar" aria-label="Editar planta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/></svg></button>
+        <button class="icon-btn" id="btn-eliminar" aria-label="Eliminar planta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9 7V5h6v2m-9 0 1 13h8l1-13"/></svg></button>
+      </div>` : "";
+
   contenido.innerHTML = `
     <div class="planta-hero">
       <div class="planta-hero-foto">
@@ -36,10 +43,7 @@ function renderHero(p) {
           ${p.especie ? `<div class="especie">${escaparHtml(p.especie)}</div>` : ""}
         </div>
       </div>
-      <div class="planta-hero-actions">
-        <button class="icon-btn" id="btn-editar" aria-label="Editar planta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/></svg></button>
-        <button class="icon-btn" id="btn-eliminar" aria-label="Eliminar planta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9 7V5h6v2m-9 0 1 13h8l1-13"/></svg></button>
-      </div>
+      ${accionesHero}
     </div>
     <div class="mensaje-callout">
       <div class="icono estado-${p.estado}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20C4 11 10 4 20 4c0 10-7 16-16 16Z"/><path d="M4 20c3-6 7-9 12-11"/></svg></div>
@@ -50,18 +54,23 @@ function renderHero(p) {
     </div>
   `;
 
-  document.getElementById("btn-editar").addEventListener("click", () => {
-    location.href = `/plantas/${encodeURIComponent(slug)}/editar`;
-  });
-  document.getElementById("btn-eliminar").addEventListener("click", async () => {
-    if (!confirm(`¿Eliminar a ${p.nombre} y todo su historial? Esta acción no se puede deshacer.`)) return;
-    try {
-      await apiDelete(`/plantas/${encodeURIComponent(slug)}`);
-      location.href = "/";
-    } catch (err) {
-      mostrarToast(err.message);
-    }
-  });
+  if (p.esPropia) {
+    document.getElementById("btn-editar").addEventListener("click", () => {
+      location.href = `/plantas/${encodeURIComponent(slug)}/editar`;
+    });
+    document.getElementById("btn-eliminar").addEventListener("click", async () => {
+      if (!confirm(`¿Eliminar a ${p.nombre} y todo su historial? Esta acción no se puede deshacer.`)) return;
+      try {
+        await apiDelete(`/plantas/${encodeURIComponent(slug)}`);
+        location.href = "/";
+      } catch (err) {
+        mostrarToast(err.message);
+      }
+    });
+  }
+
+  document.getElementById("btn-registrar")?.classList.toggle("oculto", !p.esPropia);
+  document.getElementById("fab-registrar")?.classList.toggle("oculto", !p.esPropia);
 
   document.title = `${p.nombre} · Savia`;
 }

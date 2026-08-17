@@ -178,6 +178,10 @@ select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
 
 .topbar-actions { display: flex; align-items: center; gap: 10px; }
 
+.auth-slot { display: flex; align-items: center; gap: 10px; }
+.auth-usuario { font-size: .84rem; color: var(--ink-soft); font-weight: 500; }
+@media (max-width: 480px) { .auth-usuario { display: none; } }
+
 .icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 38px; height: 38px; border-radius: 999px;

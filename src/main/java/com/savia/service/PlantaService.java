@@ -3,12 +3,15 @@ package com.savia.service;
 import com.savia.domain.AccionCuidado;
 import com.savia.domain.Planta;
 import com.savia.domain.TipoAccion;
+import com.savia.domain.Usuario;
 import com.savia.dto.PlantaDetalleDTO;
 import com.savia.dto.PlantaGuardarDTO;
 import com.savia.dto.PlantaResumenDTO;
 import com.savia.exception.RecursoNoEncontradoException;
 import com.savia.repository.AccionCuidadoRepository;
 import com.savia.repository.PlantaRepository;
+import com.savia.security.UsuarioActualProvider;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,17 +27,21 @@ public class PlantaService {
     private final PlantaRepository plantaRepository;
     private final AccionCuidadoRepository accionCuidadoRepository;
     private final EstadoPlantaCalculator estadoPlantaCalculator;
+    private final UsuarioActualProvider usuarioActualProvider;
 
     public PlantaService(PlantaRepository plantaRepository,
                           AccionCuidadoRepository accionCuidadoRepository,
-                          EstadoPlantaCalculator estadoPlantaCalculator) {
+                          EstadoPlantaCalculator estadoPlantaCalculator,
+                          UsuarioActualProvider usuarioActualProvider) {
         this.plantaRepository = plantaRepository;
         this.accionCuidadoRepository = accionCuidadoRepository;
         this.estadoPlantaCalculator = estadoPlantaCalculator;
+        this.usuarioActualProvider = usuarioActualProvider;
     }
 
     public List<PlantaResumenDTO> listarResumen() {
-        return plantaRepository.findAllByOrderByNombreAsc().stream()
+        Usuario usuario = usuarioActualProvider.requerir();
+        return plantaRepository.findByUsuarioIdOrderByNombreAsc(usuario.getId()).stream()
                 .map(this::aResumen)
                 .toList();
     }
@@ -46,7 +53,9 @@ public class PlantaService {
 
     @Transactional
     public PlantaDetalleDTO crear(PlantaGuardarDTO dto, String origenUrl) {
+        Usuario usuario = usuarioActualProvider.requerir();
         Planta planta = new Planta();
+        planta.setUsuario(usuario);
         aplicarCambios(planta, dto);
         planta.setSlug(generarSlugUnico(dto.getNombre()));
         planta = plantaRepository.save(planta);
@@ -56,6 +65,7 @@ public class PlantaService {
     @Transactional
     public PlantaDetalleDTO actualizar(String slug, PlantaGuardarDTO dto, String origenUrl) {
         Planta planta = buscarPorSlug(slug);
+        exigirPropietario(planta);
         aplicarCambios(planta, dto);
         planta = plantaRepository.save(planta);
         return aDetalle(planta, origenUrl);
@@ -64,12 +74,20 @@ public class PlantaService {
     @Transactional
     public void eliminar(String slug) {
         Planta planta = buscarPorSlug(slug);
+        exigirPropietario(planta);
         plantaRepository.delete(planta);
     }
 
     Planta buscarPorSlug(String slug) {
         return plantaRepository.findBySlug(slug)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No existe ninguna planta con el identificador '%s'".formatted(slug)));
+    }
+
+    void exigirPropietario(Planta planta) {
+        Usuario usuario = usuarioActualProvider.requerir();
+        if (!planta.getUsuario().getId().equals(usuario.getId())) {
+            throw new AccessDeniedException("Esta planta no te pertenece");
+        }
     }
 
     private PlantaResumenDTO aResumen(Planta planta) {
@@ -106,6 +124,10 @@ public class PlantaService {
 
         String urlNfc = (origenUrl == null ? "" : origenUrl) + "/plantas/" + planta.getSlug();
 
+        boolean esPropia = usuarioActualProvider.obtener()
+                .map(u -> u.getId().equals(planta.getUsuario().getId()))
+                .orElse(false);
+
         return new PlantaDetalleDTO(
                 planta.getId(),
                 planta.getSlug(),
@@ -125,7 +147,8 @@ public class PlantaService {
                 calculado.mensaje(),
                 calculado.diasDesdeUltimoRiego(),
                 calculado.proximoCuidadoTexto(),
-                urlNfc
+                urlNfc,
+                esPropia
         );
     }
 

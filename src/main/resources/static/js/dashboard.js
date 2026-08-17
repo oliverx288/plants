@@ -1,10 +1,21 @@
 import { apiGet } from "./api.js";
-import { ESTADOS, iconoPlaceholder, escaparHtml, iniciarTema } from "./utils.js";
+import { ESTADOS, iconoPlaceholder, escaparHtml, iniciarTema, estaAutenticado, iniciarBarraSesion, usuarioActual } from "./utils.js";
+
+if (!estaAutenticado()) {
+  location.href = "/login?next=" + encodeURIComponent("/");
+}
 
 iniciarTema();
+iniciarBarraSesion();
 
 const grid = document.getElementById("grid-plantas");
 const resumen = document.getElementById("resumen-coleccion");
+
+const usuario = usuarioActual();
+if (usuario) {
+  const titulo = document.querySelector(".hero-strip h1");
+  if (titulo) titulo.textContent = `La colección de ${usuario.nombre.split(" ")[0]}`;
+}
 
 function textoUltimoRiego(planta) {
   if (planta.fechaUltimoRiego == null) return "Sin registrar";

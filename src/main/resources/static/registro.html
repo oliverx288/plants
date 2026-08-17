@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Savia · Crear cuenta</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22 font-size=%2280%22><text y=%2278%22>🪴</text></svg>">
+<script>
+  (function () {
+    var guardado = localStorage.getItem("savia-tema");
+    if (guardado) document.documentElement.setAttribute("data-theme", guardado);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="preload" as="style"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20C4 11 10 4 20 4c0 10-7 16-16 16Z"/><path d="M4 20c3-6 7-9 12-11"/></symbol>
+</svg>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="wordmark" href="/"><svg><use href="#i-leaf"/></svg>Savia</a>
+  </div>
+</div>
+
+<main class="shell" style="max-width:420px;">
+  <section class="hero-strip" style="padding-top:16vh;">
+    <div>
+      <h1 style="font-size:2rem;">Empieza tu colección</h1>
+      <p class="lead">Crea tu cuenta para dar de alta tus plantas y vincular sus etiquetas NFC.</p>
+    </div>
+  </section>
+
+  <form id="form-registro">
+    <div class="campo">
+      <label for="campo-nombre">Nombre</label>
+      <input type="text" id="campo-nombre" autocomplete="name" required>
+    </div>
+    <div class="campo">
+      <label for="campo-email">Email</label>
+      <input type="email" id="campo-email" autocomplete="username" required>
+    </div>
+    <div class="campo">
+      <label for="campo-password">Contraseña</label>
+      <input type="password" id="campo-password" autocomplete="new-password" minlength="6" required>
+      <span class="ayuda">Al menos 6 caracteres.</span>
+    </div>
+    <p class="form-error oculto" id="form-registro-error"></p>
+    <div class="form-footer" style="margin-top:6px;">
+      <button type="submit" class="btn btn-primary btn-block" id="btn-registro">Crear cuenta</button>
+    </div>
+  </form>
+
+  <p style="text-align:center; margin-top:22px; color:var(--ink-soft); font-size:.9rem;">
+    ¿Ya tienes cuenta? <a href="/login" style="color:var(--verdigris); font-weight:600;">Inicia sesión</a>
+  </p>
+</main>
+
+<script type="module" src="/js/registro.js"></script>
+</body>
+</html>

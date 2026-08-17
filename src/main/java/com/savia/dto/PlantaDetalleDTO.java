@@ -25,6 +25,7 @@ public record PlantaDetalleDTO(
         String mensajeEstado,
         Integer diasDesdeUltimoRiego,
         String proximoCuidadoTexto,
-        String urlNfc
+        String urlNfc,
+        boolean esPropia
 ) {
 }

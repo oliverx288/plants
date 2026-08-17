@@ -46,6 +46,7 @@ public class AccionCuidadoService {
     @Transactional
     public AccionCuidadoDTO registrar(String slug, AccionCuidadoGuardarDTO dto) {
         Planta planta = plantaService.buscarPorSlug(slug);
+        plantaService.exigirPropietario(planta);
 
         AccionCuidado accion = AccionCuidado.builder()
                 .planta(planta)

@@ -30,6 +30,8 @@ spring:
 
 app:
   upload-dir: ${UPLOAD_DIR:uploads}
+  jwt-secret: ${JWT_SECRET:cambia-este-secreto-en-produccion-savia-nfc-plantas-2026-dev-only}
+  jwt-expiration-hours: ${JWT_EXPIRATION_HOURS:720}
 
 logging:
   level:

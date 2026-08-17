@@ -11,6 +11,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class WebViewController {
 
+    @GetMapping("/login")
+    public String login() {
+        return "forward:/login.html";
+    }
+
+    @GetMapping("/registro")
+    public String registro() {
+        return "forward:/registro.html";
+    }
+
     @GetMapping("/plantas/nueva")
     public String nuevaPlanta() {
         return "forward:/planta-form.html";

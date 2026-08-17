@@ -1,3 +1,5 @@
+import { TOKEN_KEY, USUARIO_KEY } from "./api.js";
+
 export const TIPOS_ACCION = {
   RIEGO: { emoji: "💧", label: "Riego" },
   ABONADO: { emoji: "🌱", label: "Abonado" },
@@ -90,4 +92,44 @@ export function escaparHtml(texto) {
   const div = document.createElement("div");
   div.textContent = texto ?? "";
   return div.innerHTML;
+}
+
+export function estaAutenticado() {
+  return !!localStorage.getItem(TOKEN_KEY);
+}
+
+export function usuarioActual() {
+  const raw = localStorage.getItem(USUARIO_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function guardarSesion(auth) {
+  localStorage.setItem(TOKEN_KEY, auth.token);
+  localStorage.setItem(USUARIO_KEY, JSON.stringify({ id: auth.id, nombre: auth.nombre, email: auth.email }));
+}
+
+export function cerrarSesion() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USUARIO_KEY);
+  location.href = "/login";
+}
+
+export function iniciarBarraSesion() {
+  const slot = document.querySelector("[data-auth-slot]");
+  if (!slot) return;
+  const usuario = usuarioActual();
+  if (usuario) {
+    slot.innerHTML = `
+      <span class="auth-usuario">${escaparHtml(usuario.nombre)}</span>
+      <button class="btn btn-ghost btn-sm" id="btn-cerrar-sesion">Salir</button>
+    `;
+    document.getElementById("btn-cerrar-sesion").addEventListener("click", cerrarSesion);
+  } else {
+    slot.innerHTML = `<a class="btn btn-ghost btn-sm" href="/login">Iniciar sesión</a>`;
+  }
 }

@@ -13,4 +13,6 @@ public interface PlantaRepository extends JpaRepository<Planta, Long> {
     boolean existsBySlug(String slug);
 
     List<Planta> findAllByOrderByNombreAsc();
+
+    List<Planta> findByUsuarioIdOrderByNombreAsc(Long usuarioId);
 }

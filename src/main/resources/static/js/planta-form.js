@@ -1,11 +1,16 @@
 import { apiGet, apiPost, apiPut, apiDelete, subirImagen } from "./api.js";
-import { mostrarToast, iniciarTema, escaparHtml } from "./utils.js";
+import { mostrarToast, iniciarTema, iniciarBarraSesion, estaAutenticado, escaparHtml } from "./utils.js";
 
 iniciarTema();
+iniciarBarraSesion();
 
 const partes = location.pathname.split("/").filter(Boolean);
 const esEdicion = partes.length === 3 && partes[2] === "editar";
 const slug = esEdicion ? decodeURIComponent(partes[1]) : null;
+
+if (!estaAutenticado()) {
+  location.href = "/login?next=" + encodeURIComponent(location.pathname);
+}
 
 const form = document.getElementById("form-planta");
 const fotoUploadLabel = document.getElementById("foto-upload-label");
@@ -65,6 +70,12 @@ if (esEdicion) {
 async function cargarPlanta() {
   try {
     const p = await apiGet(`/plantas/${encodeURIComponent(slug)}`);
+
+    if (!p.esPropia) {
+      mostrarToast("Esta planta no te pertenece.");
+      location.href = `/plantas/${encodeURIComponent(slug)}`;
+      return;
+    }
 
     campos.nombre.value = p.nombre ?? "";
     campos.especie.value = p.especie ?? "";
