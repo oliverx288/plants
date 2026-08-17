@@ -11,6 +11,9 @@ El documento [`docs/propuesta-savia.md`](docs/propuesta-savia.md) recoge la
 propuesta original del proyecto (concepto, diferenciales, hoja de ruta).
 Este README describe la aplicación tal y como está implementada.
 
+**Demo en producción**: https://plants-production-5029.up.railway.app
+(desplegado en Railway; incluye las tres plantas de ejemplo del dashboard)
+
 ## Stack
 
 - **Backend**: Java 17 + Spring Boot 3 (Web, Data JPA, Validation), API REST.
