@@ -1,7 +1,6 @@
 /* Savia — sistema de diseño
-   Paleta inspirada en musgo, corteza y tierra; tipografía editorial
-   (Fraunces) combinada con una sans utilitaria (Work Sans) y una
-   monoespaciada para datos (IBM Plex Mono). */
+   Paleta inspirada en musgo, corteza y tierra; tipografía Montserrat
+   en toda la aplicación, sin cursivas. */
 
 :root {
   --paper: #f3f2e6;
@@ -29,9 +28,9 @@
   --radius-md: 15px;
   --radius-sm: 10px;
 
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --font-body: "Work Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-display: "Montserrat", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-body: "Montserrat", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "Montserrat", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 :root[data-theme="dark"] {
@@ -240,7 +239,7 @@ select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
   padding: clamp(36px, 6vw, 56px) 0 30px;
   display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px;
 }
-.hero-strip h1 { font-size: clamp(2rem, 4.5vw, 2.7rem); font-style: italic; font-weight: 500; }
+.hero-strip h1 { font-size: clamp(2rem, 4.5vw, 2.7rem); font-weight: 700; }
 .hero-strip .lead { color: var(--ink-soft); margin-top: 8px; max-width: 46ch; font-size: 1rem; }
 .hero-strip .lead strong { color: var(--ink); font-weight: 600; }
 
@@ -280,7 +279,7 @@ select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
 
 .card-planta-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
 .card-planta-body h3 { font-size: 1.15rem; }
-.card-planta-body .especie { color: var(--ink-faint); font-size: .84rem; font-style: italic; margin-top: 2px; }
+.card-planta-body .especie { color: var(--ink-faint); font-size: .84rem; margin-top: 2px; }
 
 .card-planta-meta {
   margin-top: auto; padding-top: 10px; border-top: 1px solid var(--line-soft);
@@ -329,8 +328,8 @@ select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
   color: #f4f3e8;
 }
 .planta-hero-overlay .estado-pill { align-self: flex-start; margin-bottom: 12px; }
-.planta-hero-overlay h1 { font-size: clamp(1.9rem, 5vw, 3rem); font-style: italic; font-weight: 500; color: #fbfaf0; }
-.planta-hero-overlay .especie { font-size: 1rem; font-style: italic; color: rgba(251, 250, 240, .82); margin-top: 4px; }
+.planta-hero-overlay h1 { font-size: clamp(1.9rem, 5vw, 3rem); font-weight: 700; color: #fbfaf0; }
+.planta-hero-overlay .especie { font-size: 1rem; color: rgba(251, 250, 240, .82); margin-top: 4px; }
 
 .planta-hero-actions { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; }
 .planta-hero-actions .icon-btn { background: rgba(20, 27, 20, .45); border-color: rgba(255,255,255,.25); color: #fbfaf0; backdrop-filter: blur(6px); }
@@ -345,7 +344,7 @@ select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
 }
 .mensaje-callout .icono { width: 34px; height: 34px; border-radius: 999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .mensaje-callout .icono svg { width: 17px; height: 17px; }
-.mensaje-callout p { font-family: var(--font-display); font-size: 1.08rem; font-style: italic; color: var(--ink); }
+.mensaje-callout p { font-family: var(--font-display); font-size: 1.08rem; font-weight: 600; color: var(--ink); }
 .mensaje-callout .sub { font-family: var(--font-body); font-style: normal; font-size: .82rem; color: var(--ink-faint); margin-top: 3px; }
 
 /* ---------- info grid ---------- */
@@ -358,7 +357,7 @@ select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
 .info-tile { background: var(--surface); padding: 14px 16px; }
 .info-tile .eyebrow { display: block; margin-bottom: 6px; }
 .info-tile .valor { font-size: .98rem; font-weight: 600; }
-.info-tile .valor.vacio { color: var(--ink-faint); font-weight: 400; font-style: italic; }
+.info-tile .valor.vacio { color: var(--ink-faint); font-weight: 400; }
 
 .descripcion-planta { margin-top: 18px; color: var(--ink-soft); max-width: 68ch; font-size: 1rem; line-height: 1.7; }
 
