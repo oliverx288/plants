@@ -1,8 +1,11 @@
-import { Outlet } from 'react-router-dom'
+import { NavLink, Outlet } from 'react-router-dom'
 import { ROLE_LABELS } from '../auth/profile'
 import { useAuth } from '../auth/AuthContext'
 import { Badge, Button } from './ui'
 import styles from './AppLayout.module.css'
+
+const linkClass = ({ isActive }: { isActive: boolean }) =>
+  [styles.navLink, isActive ? styles.navLinkActive : ''].filter(Boolean).join(' ')
 
 export function AppLayout() {
   const { state, signOut } = useAuth()
@@ -17,6 +20,14 @@ export function AppLayout() {
       <header className={styles.header}>
         <div className={styles.inner}>
           <span className={styles.brand}>Faro</span>
+          <nav aria-label="Principal" className={styles.nav}>
+            <NavLink to="/" end className={linkClass}>
+              Asistente
+            </NavLink>
+            <NavLink to="/articulos" className={linkClass}>
+              Artículos
+            </NavLink>
+          </nav>
           <div className={styles.user}>
             <span className={styles.name}>{profile.displayName}</span>
             <Badge>{ROLE_LABELS[profile.role]}</Badge>

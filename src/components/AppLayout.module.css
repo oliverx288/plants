@@ -26,7 +26,7 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-3) var(--space-5);
   max-width: var(--container-max);
   margin: 0 auto;
   padding: var(--space-3) var(--space-4);
@@ -36,6 +36,35 @@
   font-size: var(--text-xl);
   font-weight: var(--weight-bold);
   color: var(--color-brand-700);
+}
+
+.nav {
+  display: flex;
+  gap: var(--space-2);
+  flex: 1 1 auto;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+.navLink:hover {
+  background: var(--color-brand-50);
+}
+
+/* Se marca con color de fondo Y subrayado: el estado activo no depende solo del color. */
+.navLinkActive {
+  background: var(--color-brand-100);
+  color: var(--color-brand-800);
+  text-decoration: underline;
+  text-underline-offset: 0.35em;
+  text-decoration-thickness: 2px;
 }
 
 .user {

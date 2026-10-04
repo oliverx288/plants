@@ -2,6 +2,8 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthProvider'
 import { RequireAuth } from './auth/RequireAuth'
 import { AppLayout } from './components/AppLayout'
+import { ArticlePage } from './pages/ArticlePage'
+import { ArticlesPage } from './pages/ArticlesPage'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -14,6 +16,8 @@ export function AppRoutes() {
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
           <Route index element={<HomePage />} />
+          <Route path="articulos" element={<ArticlesPage />} />
+          <Route path="articulos/:id" element={<ArticlePage />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFoundPage />} />
