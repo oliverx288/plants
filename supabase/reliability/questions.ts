@@ -19,7 +19,7 @@
 export interface TestQuestion {
   question: string
   expected: string | null
-  set: 'dev' | 'test' | 'fresh' | 'fresh2' | 'fresh3'
+  set: 'dev' | 'test' | 'fresh' | 'fresh2' | 'fresh3' | 'fresh4'
   /** Por qué es interesante / qué dificultad tiene. */
   note?: string
 }
@@ -200,4 +200,44 @@ export const FRESH3_QUESTIONS: TestQuestion[] = [
   { set: 'fresh3', expected: null, question: 'cambiar color', note: 'cercana: "cambiar"' },
   { set: 'fresh3', expected: null, question: 'llamar a soporte', note: 'cercana: "llamar"' },
   { set: 'fresh3', expected: null, question: 'pagar con tarjeta', note: 'adversaria: "pagar", "tarjeta"' },
+]
+
+/**
+ * Cuarto conjunto nuevo ("fresh4"): consultas muy CORTAS, VAGAS o con ERRATAS, las del encargo "no enciende",
+ * "bateria", "no carga". Se escribió DESPUÉS de implementar la tolerancia a erratas y la regla de una sola palabra:
+ * mide si funcionan, no si generalizan. Incluye casos que NO deben resolverse (sinónimos, palabras genéricas,
+ * erratas en palabras cortas) para que un 100 % sea sospechoso.
+ */
+export const FRESH4_QUESTIONS: TestQuestion[] = [
+  // ------------------------------------------------------------ CON respuesta
+  { set: 'fresh4', expected: 'reloj-no-enciende', question: 'no enciende', note: 'del encargo: una palabra significativa' },
+  { set: 'fresh4', expected: 'reloj-no-carga', question: 'no carga', note: 'del encargo' },
+  { set: 'fresh4', expected: 'reloj-no-enciende', question: 'no enciedne', note: 'transposición' },
+  { set: 'fresh4', expected: 'reloj-no-carga', question: 'no carca', note: 'palabra corta con errata: NO se corrige (< 6 letras)' },
+  { set: 'fresh4', expected: 'bateria-dura-poco', question: 'bateria', note: 'del encargo: empata con "se apaga solo con batería"; solo puede sugerir' },
+  { set: 'fresh4', expected: 'bateria-dura-poco', question: 'baterai', note: 'errata + empate' },
+  { set: 'fresh4', expected: 'bateria-dura-poco', question: 'la batreia dura poco', note: 'transposición en frase' },
+  { set: 'fresh4', expected: 'bateria-dura-poco', question: 'la baterya dura poco', note: 'y/í' },
+  { set: 'fresh4', expected: 'suscripcion-caducada-pago-rechazado', question: 'pago', note: 'una palabra, gana con claridad' },
+  { set: 'fresh4', expected: 'ubicacion-no-se-actualiza', question: 'no actualiza ubicacion' },
+  { set: 'fresh4', expected: 'notificaciones-con-retraso', question: 'notificasiones con retraso', note: 'sustitución c/s (la raíz no coincide con la del corpus)' },
+  { set: 'fresh4', expected: 'reloj-se-apaga-solo', question: 'se apaga' },
+  { set: 'fresh4', expected: 'reloj-no-enciende', question: 'no prende', note: 'SINÓNIMO regional: no soportado' },
+  { set: 'fresh4', expected: 'reloj-no-carga', question: 'no se carga', note: 'cercano al título' },
+  { set: 'fresh4', expected: 'cancelar-cambiar-plan', question: 'darme de baja', note: 'SINÓNIMO: no soportado' },
+  { set: 'fresh4', expected: 'reloj-no-recibe-llamadas', question: 'no recibe llamadas' },
+
+  // ------------------------------------------------------------ SIN respuesta
+  { set: 'fresh4', expected: null, question: 'reloj', note: 'palabra genérica' },
+  { set: 'fresh4', expected: null, question: 'no funciona', note: 'vaga' },
+  { set: 'fresh4', expected: null, question: 'no va', note: 'vaga' },
+  { set: 'fresh4', expected: null, question: 'problema', note: 'vaga' },
+  { set: 'fresh4', expected: null, question: 'quiero hablar con alguien', note: 'cercana: "alguien"' },
+  { set: 'fresh4', expected: null, question: 'color', note: 'ajena' },
+  { set: 'fresh4', expected: null, question: 'resistente', note: 'ajena; "pulsera"/"quiero" no deben corregirse a otra palabra' },
+  { set: 'fresh4', expected: null, question: 'quiero cambiar la pulsera', note: 'regresión: "quier" no debe corregirse a "quer"' },
+  { set: 'fresh4', expected: null, question: 'cuesta mucho', note: 'regresión: "cuest" no debe corregirse a "cuent"' },
+  { set: 'fresh4', expected: null, question: 'wifi', note: 'ajena' },
+  { set: 'fresh4', expected: null, question: 'garantia', note: 'ajena' },
+  { set: 'fresh4', expected: null, question: 'bateria del movil', note: 'cercana: "batería" pero de otro aparato' },
 ]

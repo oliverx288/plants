@@ -14,7 +14,7 @@ import { parseChunk } from '../src/assistant/chunk'
 import { DEFAULT_GATE } from '../src/assistant/relevance'
 import { checkPublicKey } from '../src/lib/publicKey'
 import { collect, grade, summarize } from '../supabase/reliability/evaluate'
-import { FRESH2_QUESTIONS, FRESH3_QUESTIONS, FRESH_QUESTIONS, QUESTIONS } from '../supabase/reliability/questions'
+import { FRESH2_QUESTIONS, FRESH3_QUESTIONS, FRESH4_QUESTIONS, FRESH_QUESTIONS, QUESTIONS } from '../supabase/reliability/questions'
 import { formatFailures, formatMetrics, formatSweep } from '../supabase/reliability/report'
 import { articles } from '../supabase/seed/articles'
 
@@ -60,17 +60,20 @@ async function main() {
     if (error) throw new Error(`La búsqueda falló: ${error.message}`)
     return ((data ?? []) as unknown[]).map(parseChunk)
   }
-  const raw = await collect(search, [...QUESTIONS, ...FRESH_QUESTIONS, ...FRESH2_QUESTIONS, ...FRESH3_QUESTIONS])
+  const raw = await collect(search, [...QUESTIONS, ...FRESH_QUESTIONS, ...FRESH2_QUESTIONS, ...FRESH3_QUESTIONS, ...FRESH4_QUESTIONS])
   const bySet = (...sets: string[]) => raw.filter((r) => sets.includes(r.question.set)).map((r) => grade(r))
 
   const original = summarize(bySet('dev', 'test'))
   const hard = summarize(bySet('fresh', 'fresh2'))
   const short = summarize(bySet('fresh3'))
+  const vague = summarize(bySet('fresh4'))
   console.log('══ CASO FÁCIL: conjunto original ══\n' + formatMetrics('Original (dev + test)', original))
   console.log('\n══ CASO DIFÍCIL: conjuntos nuevos (incluyen preguntas adversarias) ══\n' + formatMetrics('Nuevos 1 + 2', hard))
   console.log('\n══ CONSULTAS CORTAS Y COLOQUIALES ("el reloj no carga") ══\n' + formatMetrics('Cortas (nuevo 3)', short))
+  console.log('\n══ MUY CORTAS, VAGAS Y CON ERRATAS ("no enciende", "bateria") ══\n' + formatMetrics('Vagas y erratas (nuevo 4)', vague))
   console.log('\nFallos del caso difícil:\n' + formatFailures(bySet('fresh', 'fresh2')))
   console.log('\nFallos de las consultas cortas:\n' + formatFailures(bySet('fresh3')))
+  console.log('\nFallos de las muy cortas, vagas y con erratas:\n' + formatFailures(bySet('fresh4')))
   console.log(
     `\nQué pasa al mover la evidencia mínima (puntuación mínima ${DEFAULT_GATE.minScore}; sobre todas las preguntas):\n` +
       formatSweep(raw, DEFAULT_GATE.minScore, [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0], DEFAULT_GATE.minMatchedWeight),

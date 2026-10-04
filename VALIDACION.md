@@ -9,7 +9,7 @@ cada cosa, porque no es lo mismo.
 | 🧪 **Local** | Comprobado con tests automáticos sobre un Postgres real en local (PGlite) o con un Supabase simulado. Fiable para la lógica y el SQL; no sustituye a una prueba real |
 | ⏳ **Pendiente** | Hay que ejecutarlo contra el Supabase real y pegar aquí el resultado (instrucciones incluidas) |
 
-Pruebas automáticas: **368 tests en 24 archivos**, todos en verde (`npm test`), más typecheck y lint limpios.
+Pruebas automáticas: **399 tests en 25 archivos**, todos en verde (`npm test`), más typecheck y lint limpios.
 Cada bloque de tests se validó además con **pruebas de mutación**: se rompió el código a propósito y se
 comprobó que algún test fallaba. Las mutaciones que sobrevivieron se anotan donde corresponde.
 
@@ -343,6 +343,69 @@ el *siguiente*; en un empate, el segundo no tenía siguiente y se colaba como «
 equivocado. Se corrigió aplicándola solo al primer resultado. Además, una mutación sobrevivió (el test del límite de
 evidencia se calculaba a partir de la propia constante) y se fijaron los límites con valores literales.
 
+### 2.9 Consultas muy cortas, vagas y con erratas («no enciende», «bateria», «no carga»)
+
+**Petición.** Que el asistente entienda frases cortas e imprecisas: `no enciende`, `bateria` (con errata), `no carga`.
+
+**Diagnóstico de lo que fallaba** (medido antes de tocar nada):
+
+| Consulta | Qué pasaba |
+|---|---|
+| `no enciende`, `no carga` | «no» es palabra vacía, así que queda **un solo** término significativo. El artículo correcto era el primero con puntuación 1,00, pero la regla de §2.8 exigía ≥ 2 términos. |
+| `bateria` | Dos artículos coinciden por igual en el título («La batería dura poco» y «El reloj se apaga solo con batería disponible»): **empate real**, no hay forma de saber cuál busca. |
+| `baterai`, `bateira` | La palabra no existe en ningún artículo, así que no coincidía con nada. |
+
+**Tres cambios, cada uno con su límite:**
+
+1. **Una sola palabra gana si lo hace con claridad.** Con un único término significativo se exige más que con varios:
+   puntuación ≥ 0,9, evidencia ≥ 1,5 y **margen ≥ 0,3** sobre el siguiente artículo (con ≥ 2 términos basta 0,1). Quiere
+   decir: el término está en el título de un único artículo y, como mucho, en el cuerpo de los demás. Una palabra
+   genérica («reloj», «problema») no pasa. Cubre `no enciende`, `no carga`, `se apaga`, `pago`.
+2. **Los empates se ofrecen como sugerencias, no se responden.** Si varios artículos coinciden por completo (máximo 3) la
+   interfaz dice «Varios artículos podrían servir» y enseña **solo títulos con enlace, sin pasos**. No se guarda la pregunta
+   como «sin respuesta» (sí hay artículos que la cubren). Cubre `bateria` y `el SOS no llama`.
+3. **Corrección de erratas en la base de datos** (migración 7, distancia de Levenshtein con `fuzzystrmatch`). Una palabra
+   que no existe en los artículos se sustituye por la más parecida del vocabulario solo si: la raíz tiene **≥ 6 letras**,
+   hay **una sola candidata** a esa distancia, la primera letra coincide, y la diferencia es **1 error o 1 transposición**.
+   Una palabra que existe no se toca nunca.
+
+**Un error que me cazó la propia medición.** La primera versión corregía raíces de 5 letras con hasta 2 errores. Los
+conjuntos antiguos pasaron de **0 a 2 respuestas inventadas**: «quiero» (raíz «quier») se convertía en «querer» y «cuesta»
+(«cuest») en «cuenta», y con eso «Quiero cambiar la pulsera del reloj» respondía con un artículo de SOS. Se endureció la
+regla (arriba) hasta recuperar el 0 y hay tests con esos dos casos exactos. Los tests de la migración se verificaron
+rompiéndola a propósito (4 mutaciones: longitud mínima, empate entre candidatas, primera letra, transposición): los
+cuatro hacen fallar un test.
+
+| Conjunto | Aciertos antes → después | Inventadas antes → después |
+|---|---|---|
+| Original (41) | 85,4 % → **85,4 %** (idéntico) | 0 → 0 |
+| Nuevo 1 (28) | 50,0 % → 50,0 % | 6 → 6 |
+| Nuevo 2 (31) | 58,1 % → **61,3 %** | 6 → 6 |
+| Cortas (32) | 87,5 % → **93,8 %** (recall 85 % → 95 %) | 1 → 1 |
+| **Muy cortas, vagas y erratas (28, nuevo)** | — → **82,1 %** (recall 69 %; todo lo que responde es correcto: 100 %) | 0 de 12 |
+
+No aparecen respuestas inventadas nuevas en ningún conjunto (un test lo vigila). **Aviso honesto:** el conjunto «muy
+cortas, vagas y erratas» lo escribí **después** de implementar los cambios y con ejemplos pensados para ellos, así que
+demuestra que funcionan, **no** que generalicen a lo que escriba un agente real. Los otros conjuntos antiguos sí son
+evidencia de que no se ha roto nada.
+
+**Resultado de los tres ejemplos del encargo:**
+
+| Consulta | Resultado |
+|---|---|
+| `no enciende` | ✅ «El reloj no enciende o se queda en el logotipo» |
+| `no carga` | ✅ «El reloj no carga» |
+| `bateria` / `baterai` | ⚠️ **Sugerencias**: «La batería dura poco» y «El reloj se apaga solo con batería disponible». No responde con una sola porque **hay dos artículos igual de buenos**; decidir por el agente es más honesto que adivinar. |
+| `la baterya dura poco`, `no enciedne`, `la batreia dura poco` | ✅ corregidas |
+
+**Lo que sigue sin funcionar (y los tests lo documentan):**
+- **Sinónimos**: `no prende`, `darme de baja`. Hace falta una tabla de sinónimos o búsqueda semántica (embeddings).
+- **Erratas en palabras cortas** (< 6 letras en la raíz): `no carca`. Es el precio de no inventar: corregirlas rompía otras
+  respuestas.
+- **Sustituciones que cambian la raíz** (`notificasiones` no llega a coincidir con la raíz de «notificaciones»).
+
+⏳ Pendiente de verificar en tu Supabase real: aplicar la migración 7 y probar `no enciende`, `bateria`, `no carga`.
+
 **Lo que NO resuelve (a propósito).**
 - `no enciende` y `no tiene cobertura`: tras quitar palabras vacías solo queda **1** término, indistinguible de «reloj» a
   secas sin reabrir las respuestas inventadas.
@@ -359,7 +422,7 @@ arregla ese patrón, no que generalice a otros; la prueba de que no daña es la 
 Principio: *el frontend solo muestra u oculta; la seguridad la aplica el servidor.*
 
 ### 3.1 Pruebas automáticas sobre Postgres real 🧪
-`supabase/tests/rls.test.ts` (33), `search.test.ts` (26), `save_article.test.ts` (24) y `feedback.test.ts` (14) ejecutan **las migraciones
+`supabase/tests/rls.test.ts` (33), `search.test.ts` (26), `search_typos.test.ts` (12), `save_article.test.ts` (24) y `feedback.test.ts` (14) ejecutan **las migraciones
 reales** y comprueban con roles reales de Postgres (`anon`, `authenticated`) y RLS activa:
 
 - RLS activada en **todas** las tablas (un test falla si se añade una tabla sin ella).

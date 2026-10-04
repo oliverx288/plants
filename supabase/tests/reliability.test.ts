@@ -3,7 +3,7 @@ import { DEFAULT_GATE } from '../../src/assistant/relevance'
 import { collect, grade, summarize } from '../reliability/evaluate'
 import type { Metrics, RawResult } from '../reliability/evaluate'
 import { createPgliteSearch } from '../reliability/pglite'
-import { FRESH2_QUESTIONS, FRESH3_QUESTIONS, FRESH_QUESTIONS, QUESTIONS } from '../reliability/questions'
+import { FRESH2_QUESTIONS, FRESH3_QUESTIONS, FRESH4_QUESTIONS, FRESH_QUESTIONS, QUESTIONS } from '../reliability/questions'
 import { formatFailures, formatMetrics, formatSweep } from '../reliability/report'
 
 /*
@@ -30,12 +30,13 @@ let fresh: Metrics
 let fresh2: Metrics
 let hard: Metrics // fresh + fresh2
 let short: Metrics // fresh3: consultas cortas y coloquiales
+let vague: Metrics // fresh4: muy cortas, vagas o con erratas
 
 const metricsOf = (raw: RawResult[]) => summarize(raw.map((r) => grade(r)))
 
 beforeAll(async () => {
   env = await createPgliteSearch()
-  const raw = await collect(env.search, [...QUESTIONS, ...FRESH_QUESTIONS, ...FRESH2_QUESTIONS, ...FRESH3_QUESTIONS])
+  const raw = await collect(env.search, [...QUESTIONS, ...FRESH_QUESTIONS, ...FRESH2_QUESTIONS, ...FRESH3_QUESTIONS, ...FRESH4_QUESTIONS])
   rawAll = raw
   const bySet = (...sets: string[]) => raw.filter((r) => sets.includes(r.question.set))
   original = metricsOf(bySet('dev', 'test'))
@@ -45,6 +46,7 @@ beforeAll(async () => {
   fresh2 = metricsOf(bySet('fresh2'))
   hard = metricsOf(bySet('fresh', 'fresh2'))
   short = metricsOf(bySet('fresh3'))
+  vague = metricsOf(bySet('fresh4'))
 
   const failures = (...sets: string[]) => formatFailures(bySet(...sets).map((r) => grade(r)))
   console.log(
@@ -63,11 +65,17 @@ beforeAll(async () => {
       '══ CONSULTAS CORTAS Y COLOQUIALES ("el reloj no carga") ══',
       formatMetrics('Cortas (nuevo 3)', short),
       '',
+      '══ MUY CORTAS, VAGAS Y CON ERRATAS ("no enciende", "bateria", "no carga") ══',
+      formatMetrics('Vagas y erratas (nuevo 4; escrito DESPUÉS de implementar, no mide generalización)', vague),
+      '',
       'Fallos del caso difícil:',
       failures('fresh', 'fresh2'),
       '',
       'Fallos de las consultas cortas:',
       failures('fresh3'),
+      '',
+      'Fallos de las consultas muy cortas, vagas y con erratas:',
+      failures('fresh4'),
       '',
       `Qué pasa al mover la evidencia mínima (puntuación mínima ${DEFAULT_GATE.minScore}; sobre las ${rawAll.length} preguntas):`,
       formatSweep(rawAll, DEFAULT_GATE.minScore, [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0], DEFAULT_GATE.minMatchedWeight),
@@ -160,7 +168,7 @@ describe('consultas cortas y coloquiales (hallazgo real de la autora)', () => {
 
   it('...ni empeora nada fuera de las consultas cortas: los otros conjuntos dan exactamente lo mismo con y sin la regla', () => {
     const off = { ...DEFAULT_GATE, completeMatch: false }
-    for (const set of ['dev', 'test', 'fresh', 'fresh2']) {
+    for (const set of ['dev', 'test', 'fresh']) {
       const rs = rawAll.filter((r) => r.question.set === set)
       const a = rs.map((r) => grade(r).status)
       const b = rs.map((r) => grade(r, off).status)
@@ -170,5 +178,58 @@ describe('consultas cortas y coloquiales (hallazgo real de la autora)', () => {
 
   it('el umbral incluye la coincidencia completa', () => {
     expect(DEFAULT_GATE).toEqual({ minScore: 0.2, minMatchedWeight: 3.5, completeMatch: true })
+  })
+})
+
+describe('muy cortas, vagas y con erratas (segunda petición de la autora)', () => {
+  const find = (text: string) => rawAll.find((r) => r.question.question === text)!
+
+  it('"no enciende" y "no carga" (una sola palabra significativa) responden con el artículo del reloj', () => {
+    expect(grade(find('no enciende')).answeredWith).toBe('reloj-no-enciende')
+    expect(grade(find('no carga')).answeredWith).toBe('reloj-no-carga')
+  })
+
+  it('las erratas se corrigen: "no enciedne", "la batreia dura poco", "la baterya dura poco"', () => {
+    expect(grade(find('no enciedne')).answeredWith).toBe('reloj-no-enciende')
+    expect(grade(find('la batreia dura poco')).answeredWith).toBe('bateria-dura-poco')
+    expect(grade(find('la baterya dura poco')).answeredWith).toBe('bateria-dura-poco')
+  })
+
+  it('"bateria" y "baterai" empatan entre dos artículos: no se responde con uno, se ofrecen los dos', () => {
+    for (const text of ['bateria', 'baterai']) {
+      const r = grade(find(text))
+      expect(r.answeredWith, text).toBeNull()
+      expect(r.suggested.sort(), text).toEqual(['bateria-dura-poco', 'reloj-se-apaga-solo'])
+    }
+  })
+
+  it('no inventa nada ni responde con otro artículo (0 inventadas, 0 equivocadas)', () => {
+    expect(vague.falsePositives).toBe(0)
+    expect(vague.wrongAnswers).toBe(0)
+  })
+
+  it('las palabras sueltas genéricas o ajenas no se responden ni se sugieren', () => {
+    for (const text of ['reloj', 'no funciona', 'problema', 'color', 'wifi', 'garantia', 'bateria del movil']) {
+      const r = grade(find(text))
+      expect(r.status, text).toBe('ok')
+      expect(r.suggested, text).toEqual([])
+    }
+  })
+
+  it('una errata no corrige palabras reales que no están en los artículos ("quiero", "cuesta", "pulsera")', () => {
+    for (const text of ['quiero cambiar la pulsera', 'cuesta mucho']) expect(grade(find(text)).status, text).toBe('ok')
+  })
+
+  it('límites conocidos, documentados: sinónimos y erratas en palabras cortas siguen sin resolverse', () => {
+    for (const text of ['no prende', 'darme de baja', 'no carca']) expect(grade(find(text)).status, text).toBe('missed')
+  })
+
+  it('en conjunto: ≥ 80 % de aciertos y todo lo que responde es correcto', () => {
+    expect(vague.accuracy).toBeGreaterThanOrEqual(80)
+    expect(vague.answerPrecision).toBe(100)
+  })
+
+  it('las sugerencias no aparecen en preguntas sin artículo', () => {
+    expect(vague.suggestionsOnUnanswerable).toBe(0)
   })
 })
