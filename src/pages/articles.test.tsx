@@ -59,6 +59,7 @@ vi.mock('../lib/supabase', () => ({ supabase: fake.client }))
 
 import { AppRoutes } from '../App'
 import { AuthProvider } from '../auth/AuthProvider'
+import { a11yViolations } from '../test/axe'
 
 const ID_GPS = '10000000-0000-4000-8000-000000000001'
 const ID_SOS = '10000000-0000-4000-8000-000000000002'
@@ -199,5 +200,19 @@ describe('navegación', () => {
     expect(within(nav).getByRole('link', { name: 'Asistente' })).toBeTruthy()
     expect(articulos.getAttribute('aria-current')).toBe('page')
     expect(within(nav).getByRole('link', { name: 'Asistente' }).getAttribute('aria-current')).toBeNull()
+  })
+})
+
+describe('accesibilidad (axe-core)', () => {
+  it('lista de artículos', async () => {
+    open('/articulos')
+    await screen.findByRole('link', { name: 'La ubicación no se actualiza' })
+    expect(await a11yViolations()).toEqual([])
+  })
+
+  it('detalle de un artículo', async () => {
+    open(`/articulos/${ID_GPS}#seccion-1`)
+    await screen.findByRole('heading', { level: 1, name: 'La ubicación no se actualiza' })
+    expect(await a11yViolations()).toEqual([])
   })
 })

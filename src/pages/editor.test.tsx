@@ -96,6 +96,7 @@ vi.mock('../lib/supabase', () => ({ supabase: fake.client }))
 
 import { AppRoutes } from '../App'
 import { AuthProvider } from '../auth/AuthProvider'
+import { a11yViolations } from '../test/axe'
 
 const ID_A = '10000000-0000-4000-8000-000000000001'
 const article = (id: string, title: string, category: string) => ({
@@ -409,5 +410,30 @@ describe('el agente NO ve ni puede abrir las pantallas del editor (la seguridad 
     open('/articulos')
     expect(await screen.findByRole('link', { name: 'Nuevo artículo' })).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Preguntas sin respuesta' })).toBeTruthy()
+  })
+})
+
+describe('accesibilidad (axe-core)', () => {
+  it('formulario de nuevo artículo, también con errores de validación', async () => {
+    open('/articulos/nuevo')
+    const user = userEvent.setup()
+    await screen.findByLabelText('Título')
+    expect(await a11yViolations()).toEqual([])
+    await user.click(screen.getByRole('button', { name: 'Crear artículo' }))
+    await screen.findByText('Revisa los campos marcados')
+    expect(await a11yViolations()).toEqual([])
+  })
+
+  it('edición con la confirmación de borrado abierta', async () => {
+    open(`/articulos/${ID_A}/editar`)
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Borrar este artículo' }))
+    expect(await a11yViolations()).toEqual([])
+  })
+
+  it('preguntas sin respuesta', async () => {
+    open('/preguntas')
+    await screen.findByRole('button', { name: /Pendientes/ })
+    expect(await a11yViolations()).toEqual([])
   })
 })

@@ -61,6 +61,7 @@ vi.mock('../lib/supabase', () => ({ supabase: fake.client }))
 
 import { AppRoutes } from '../App'
 import { AuthProvider } from './AuthProvider'
+import { a11yViolations } from '../test/axe'
 import { RequireAuth } from './RequireAuth'
 import { RequireRole } from './RequireRole'
 
@@ -242,5 +243,17 @@ describe('cerrar sesión', () => {
     expect(screen.getByText('Lucía')).toBeTruthy()
     expect(screen.getByText('Agente')).toBeTruthy()
     expect(screen.queryByText('Editor')).toBeNull()
+  })
+})
+
+describe('accesibilidad (axe-core)', () => {
+  it('pantalla de login, también con errores', async () => {
+    setup('/')
+    await screen.findByLabelText('Correo electrónico')
+    expect(await a11yViolations()).toEqual([])
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Entrar' }))
+    await screen.findByText('Escribe tu correo electrónico.')
+    expect(await a11yViolations()).toEqual([])
   })
 })

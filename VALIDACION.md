@@ -9,7 +9,7 @@ cada cosa, porque no es lo mismo.
 | 🧪 **Local** | Comprobado con tests automáticos sobre un Postgres real en local (PGlite) o con un Supabase simulado. Fiable para la lógica y el SQL; no sustituye a una prueba real |
 | ⏳ **Pendiente** | Hay que ejecutarlo contra el Supabase real y pegar aquí el resultado (instrucciones incluidas) |
 
-Pruebas automáticas: **286 tests en 21 archivos**, todos en verde (`npm test`), más typecheck y lint limpios.
+Pruebas automáticas: **298 tests en 22 archivos**, todos en verde (`npm test`), más typecheck y lint limpios.
 Cada bloque de tests se validó además con **pruebas de mutación**: se rompió el código a propósito y se
 comprobó que algún test fallaba. Las mutaciones que sobrevivieron se anotan donde corresponde.
 
@@ -104,8 +104,27 @@ secciones se reemplazan enteras en cada guardado (sus ids internos cambian; los 
 Tokens de color, tipografía y espaciado; componentes reutilizables. Contrastes medidos con un script:
 texto 7,2–15,5:1, botón primario 5,8:1, borde de controles 4,2:1 (todos ≥ WCAG AA). Foco visible, enlace «saltar
 al contenido», estado activo no solo por color, objetivos táctiles de 44 px, sin desbordamiento horizontal a
-390 px (comprobado en un navegador real, 🧪). **No se ha hecho una auditoría con lector de pantalla**: es una
-limitación.
+390 px (comprobado en un navegador real, 🧪).
+
+**Auditoría con axe-core en un navegador real 🧪** (WCAG 2.0/2.1/2.2 A y AA + buenas prácticas) sobre **12
+pantallas y estados**: login, asistente (vacío, con respuesta, sin información, con error de validación),
+artículos, detalle, editor (con errores de validación y con la confirmación de borrado abierta), preguntas sin
+respuesta, y dos vistas móviles.
+
+| Resultado | Detalle |
+|---|---|
+| **9 de 12 sin ninguna violación** | |
+| **1 violación real, en 3 vistas del editor** | `heading-order`: los títulos «Sección N» eran `<h3>` justo debajo del `<h1>`, saltándose el nivel 2. **Corregido** (ahora `<h2>`) |
+| «Contraste por revisar a mano» en 2–5 elementos | Son solo **iconos de texto** (✕, ↑, ↓): axe no puede calcular el contraste de un glifo. Usan los mismos tokens ya medidos. No son violaciones |
+
+Para que no vuelva a pasar, la auditoría axe forma parte de `npm test` (jsdom: estructura, ARIA, etiquetas,
+encabezados, nombres accesibles; **no** contraste). Se comprobó con mutaciones que reintroducir el salto de
+encabezados, quitar una etiqueta de formulario o un nombre accesible, o quitar `role="alert"` a los avisos de
+error hace fallar algún test (esta última sobrevivía y se añadió un test).
+
+**Limitación: no se ha hecho una prueba manual con lector de pantalla** (NVDA, VoiceOver…) ni se ha medido el
+contraste con axe en un navegador de la autora. axe detecta de forma automática solo una parte de los problemas
+de accesibilidad.
 
 ---
 

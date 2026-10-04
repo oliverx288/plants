@@ -91,7 +91,7 @@ hayas elegido y **no uses nunca contraseñas reales**.
 
 | Comando | Qué hace |
 |---|---|
-| `npm test` | Todas las pruebas (286), sin necesidad de credenciales |
+| `npm test` | Todas las pruebas (298, incluida una auditoría de accesibilidad con axe-core), sin necesidad de credenciales |
 | `npm run reliability` | Mide la fiabilidad del asistente con 41 preguntas y muestra el porcentaje de aciertos |
 | `npm run security` | Tests de seguridad: cabeceras, secretos y arnés de intrusión |
 | `npm run reliability:live` | Lo mismo que `reliability`, contra **tu** Supabase real |

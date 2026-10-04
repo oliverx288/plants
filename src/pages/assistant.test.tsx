@@ -45,6 +45,7 @@ vi.mock('../lib/supabase', () => ({ supabase: fake.client }))
 
 import { AppRoutes } from '../App'
 import { AuthProvider } from '../auth/AuthProvider'
+import { a11yViolations } from '../test/axe'
 
 const row = (over: Record<string, unknown> = {}) => ({
   article_id: '10000000-0000-4000-8000-000000000001',
@@ -231,5 +232,28 @@ describe('asistente: validación y errores', () => {
     releaseFirst() // llega tarde la primera
     await waitFor(() => expect(within(screen.getByRole('article')).getByRole('link').textContent).toBe('Respuesta NUEVA'))
     expect(screen.queryByText('Respuesta ANTIGUA')).toBeNull()
+  })
+})
+
+describe('accesibilidad (axe-core)', () => {
+  it('vacío, con respuesta, sin información y con error de validación', async () => {
+    open()
+    await screen.findByLabelText('Duda del cliente')
+    expect(await a11yViolations()).toEqual([])
+
+    const user = await ask('ab')
+    await screen.findByText('Escribe al menos 3 caracteres.')
+    expect(await a11yViolations()).toEqual([])
+
+    await user.clear(screen.getByLabelText('Duda del cliente'))
+    await user.type(screen.getByLabelText('Duda del cliente'), 'la ubicación no se actualiza')
+    await user.click(screen.getByRole('button', { name: 'Preguntar' }))
+    await screen.findByRole('heading', { name: 'Respuesta' })
+    expect(await a11yViolations()).toEqual([])
+
+    fake.state.search = () => ok([])
+    await user.click(screen.getByRole('button', { name: 'Preguntar' }))
+    await screen.findByText('No tengo información sobre esto')
+    expect(await a11yViolations()).toEqual([])
   })
 })
