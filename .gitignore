@@ -1,0 +1,11 @@
+node_modules
+dist
+*.tsbuildinfo
+
+# Secretos: nunca al repositorio
+.env
+.env.*
+!.env.example
+
+.vercel
+.DS_Store
