@@ -1,0 +1,21 @@
+.page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: var(--space-4);
+}
+
+.card {
+  width: 100%;
+  max-width: 26rem;
+}
+
+.title {
+  margin-bottom: var(--space-1);
+  color: var(--color-brand-700);
+}
+
+.subtitle {
+  margin-bottom: var(--space-5);
+  color: var(--color-text-muted);
+}
