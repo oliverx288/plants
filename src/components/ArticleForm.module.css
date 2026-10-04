@@ -54,8 +54,9 @@
   gap: var(--space-3);
   margin-bottom: var(--space-3);
 }
-.sectionHeader h3 {
+.sectionTitle {
   margin: 0;
+  font-size: var(--text-lg);
 }
 
 .sectionActions {

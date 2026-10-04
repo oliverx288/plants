@@ -130,7 +130,7 @@ export function ArticleForm({ initial, categories, submitLabel, onSubmit }: Arti
           return (
             <Card key={section.key} className={styles.card} role="group" aria-label={`Sección ${n}`}>
               <div className={styles.sectionHeader}>
-                <h3>Sección {n}</h3>
+                <h2 className={styles.sectionTitle}>Sección {n}</h2>
                 <div className={styles.sectionActions}>
                   <Button
                     variant="secondary"
