@@ -11,7 +11,9 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:db": "vitest run supabase/tests",
-    "seed": "tsx --env-file=.env scripts/seed.ts"
+    "seed": "tsx --env-file=.env scripts/seed.ts",
+    "reliability:live": "tsx --env-file=.env scripts/reliability-live.ts",
+    "reliability": "vitest run supabase/tests/reliability.test.ts --disable-console-intercept"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
