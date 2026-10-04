@@ -5,7 +5,7 @@ import type { AssistantDeps } from './ask'
 import { ExtractiveAnswerGenerator } from './generator'
 import { normalizeQuestion } from './question'
 import { MIN_MATCHED_WEIGHT, MIN_SCORE, isRelevant, selectRelevant } from './relevance'
-import { parseChunk } from './retrieval'
+import { parseChunk } from './chunk'
 import type { AnswerGenerator, RetrievedChunk } from './types'
 
 const chunk = (over: Partial<RetrievedChunk> = {}): RetrievedChunk => ({
