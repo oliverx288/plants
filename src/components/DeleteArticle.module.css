@@ -1,0 +1,18 @@
+.zone {
+  max-width: 48rem;
+  margin-top: var(--space-7);
+  padding-top: var(--space-5);
+  border-top: 2px solid var(--color-danger-border);
+}
+
+.title {
+  color: var(--color-danger-text);
+  font-size: var(--text-lg);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}

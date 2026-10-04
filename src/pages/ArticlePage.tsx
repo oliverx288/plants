@@ -1,9 +1,11 @@
 import { useCallback, useEffect } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { Alert, Badge, Button, Spinner } from '../components/ui'
+import { useIsEditor } from '../auth/useIsEditor'
+import { Alert, Badge, Button, ButtonLink, Spinner } from '../components/ui'
 import { fetchArticle } from '../lib/articles'
 import { formatDate } from '../lib/format'
 import { useAsyncData } from '../lib/useAsyncData'
+import { useFlashNotice } from '../lib/useFlashNotice'
 import { isUuid } from '../lib/uuid'
 import styles from './ArticlePage.module.css'
 
@@ -21,6 +23,8 @@ function NotFound() {
 export function ArticlePage() {
   const { id } = useParams()
   const { hash } = useLocation()
+  const isEditor = useIsEditor()
+  const notice = useFlashNotice()
 
   // Un id mal formado ni siquiera se envía a la base de datos.
   const load = useCallback(() => (isUuid(id) ? fetchArticle(id) : Promise.resolve(null)), [id])
@@ -50,6 +54,11 @@ export function ArticlePage() {
 
   return (
     <article>
+      {notice && (
+        <Alert tone="success" style={{ marginBottom: 'var(--space-4)' }}>
+          {notice}
+        </Alert>
+      )}
       <p className={styles.back}>
         <Link to="/articulos">← Todos los artículos</Link>
       </p>
@@ -58,6 +67,13 @@ export function ArticlePage() {
         <Badge>{article.category}</Badge>
         <span>Última revisión: {formatDate(article.lastReviewedAt)}</span>
       </p>
+      {isEditor && (
+        <p>
+          <ButtonLink to={`/articulos/${article.id}/editar`} variant="secondary">
+            Editar artículo
+          </ButtonLink>
+        </p>
+      )}
 
       {/* Todo el contenido son nodos de texto de React (escapados): nunca se interpreta como HTML. */}
       {article.sections.map((section) => (

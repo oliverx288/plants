@@ -1,18 +1,32 @@
 import { Link } from 'react-router-dom'
-import { Alert, Button, Card, Spinner } from '../components/ui'
+import { useIsEditor } from '../auth/useIsEditor'
+import { Alert, Button, ButtonLink, Card, Spinner } from '../components/ui'
 import { fetchArticles } from '../lib/articles'
 import { groupByCategory } from '../lib/categories'
 import { formatDate } from '../lib/format'
 import { useAsyncData } from '../lib/useAsyncData'
+import { useFlashNotice } from '../lib/useFlashNotice'
 import styles from './ArticlesPage.module.css'
 
 export function ArticlesPage() {
   const { state, reload } = useAsyncData(fetchArticles)
+  const isEditor = useIsEditor()
+  const notice = useFlashNotice()
 
   return (
     <>
+      {notice && (
+        <Alert tone="success" style={{ marginBottom: 'var(--space-4)' }}>
+          {notice}
+        </Alert>
+      )}
       <h1>Artículos</h1>
       <p className={styles.intro}>Base de conocimiento de soporte, por categorías.</p>
+      {isEditor && (
+        <p>
+          <ButtonLink to="/articulos/nuevo">Nuevo artículo</ButtonLink>
+        </p>
+      )}
 
       {state.status === 'loading' && <Spinner label="Cargando artículos…" />}
 

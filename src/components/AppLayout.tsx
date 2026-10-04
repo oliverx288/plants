@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { ROLE_LABELS } from '../auth/profile'
 import { useAuth } from '../auth/AuthContext'
+import { useIsEditor } from '../auth/useIsEditor'
 import { Badge, Button } from './ui'
 import styles from './AppLayout.module.css'
 
@@ -9,6 +10,7 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 
 export function AppLayout() {
   const { state, signOut } = useAuth()
+  const isEditor = useIsEditor()
   if (state.status !== 'signedIn') return null
   const { profile } = state
 
@@ -27,6 +29,11 @@ export function AppLayout() {
             <NavLink to="/articulos" className={linkClass}>
               Artículos
             </NavLink>
+            {isEditor && (
+              <NavLink to="/preguntas" className={linkClass}>
+                Preguntas sin respuesta
+              </NavLink>
+            )}
           </nav>
           <div className={styles.user}>
             <span className={styles.name}>{profile.displayName}</span>

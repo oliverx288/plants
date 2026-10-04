@@ -41,3 +41,20 @@
 .danger:hover:not(:disabled) {
   background: #701616;
 }
+
+/* Cuando el botón es un enlace: sin subrayado y con el color del botón. */
+.link {
+  text-decoration: none;
+}
+.link.primary,
+.link.primary:hover {
+  color: #fff;
+}
+.link.secondary,
+.link.secondary:hover {
+  color: var(--color-brand-700);
+}
+.link.danger,
+.link.danger:hover {
+  color: #fff;
+}

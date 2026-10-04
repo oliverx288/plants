@@ -1,4 +1,5 @@
 export { Button } from './Button'
+export { ButtonLink } from './ButtonLink'
 export { InputField, TextareaField } from './Field'
 export { Alert } from './Alert'
 export { Card } from './Card'
