@@ -19,7 +19,7 @@
 export interface TestQuestion {
   question: string
   expected: string | null
-  set: 'dev' | 'test'
+  set: 'dev' | 'test' | 'fresh' | 'fresh2'
   /** Por qué es interesante / qué dificultad tiene. */
   note?: string
 }
@@ -73,4 +73,87 @@ export const QUESTIONS: TestQuestion[] = [
   { set: 'test', expected: null, question: 'Mi madre quiere saber si funciona en otro país', note: 'hueco: itinerancia' },
   { set: 'test', expected: null, question: '¿Cuál es el teléfono de atención al cliente?', note: 'cercana al dominio: "teléfono" aparece' },
   { set: 'test', expected: null, question: '¿Se puede pagar con Bizum?', note: 'adversaria: "pagar/pago" aparece en el artículo de suscripción' },
+]
+
+/*
+ * Conjunto NUEVO ("fresh"), escrito DESPUÉS de gastar el conjunto de test y ANTES de implementar los sinónimos
+ * y las sugerencias. Sirve para medir esas dos mejoras con preguntas que no se miraron al diseñarlas.
+ * Se midió primero el sistema SIN ninguna mejora (línea base). Misma limitación: lo escribió quien también
+ * escribió el sistema.
+ */
+export const FRESH_QUESTIONS: TestQuestion[] = [
+  // ------------------------------------------------------------ CON respuesta
+  { set: 'fresh', expected: 'reloj-sin-cobertura', question: 'El reloj de mi suegra no coge la línea' },
+  { set: 'fresh', expected: 'ubicacion-no-se-actualiza', question: 'No puedo ver dónde está mi madre en el mapa desde ayer', note: 'difícil: sin palabras del título' },
+  { set: 'fresh', expected: 'zona-segura-sin-aviso', question: 'Quiero que me avise cuando mi padre salga del barrio', note: 'difícil: avisar/salir/barrio' },
+  { set: 'fresh', expected: 'actualizacion-a-medias', question: 'El reloj se ha quedado congelado actualizando el software' },
+  { set: 'fresh', expected: 'sos-no-llama', question: 'Mi madre dice que el botón de emergencia no responde', note: 'sinónimo: emergencia/SOS' },
+  { set: 'fresh', expected: 'notificaciones-con-retraso', question: 'Me llegan los avisos del reloj muy tarde', note: 'sinónimos: avisos/notificaciones, tarde/retraso' },
+  { set: 'fresh', expected: 'anadir-familiar-cambiar-titular', question: 'No sé cómo dar de alta a mi cuñada para que vea al abuelo', note: 'difícil' },
+  { set: 'fresh', expected: 'suscripcion-caducada-pago-rechazado', question: 'La tarjeta de la suscripción ha caducado, ¿cómo la actualizo?' },
+  { set: 'fresh', expected: 'reloj-no-recibe-llamadas', question: 'Mi madre no puede contestar llamadas, no suena' },
+  { set: 'fresh', expected: 'llamada-no-se-oye-bien', question: 'No se escucha a la persona que llama, hay mucho eco', note: 'sinónimo: escuchar/oír' },
+  { set: 'fresh', expected: 'app-no-inicia-sesion', question: 'No me acuerdo de la contraseña de la app' },
+  { set: 'fresh', expected: 'reloj-no-carga', question: 'El reloj tarda siglos en ponerse a cargar' },
+  { set: 'fresh', expected: 'bateria-dura-poco', question: 'La batería no aguanta ni medio día', note: 'sinónimo: aguantar/durar' },
+  { set: 'fresh', expected: 'sos-falsa-alarma', question: 'Se activó la alarma sin querer mientras dormía' },
+
+  // ------------------------------------------------------------ SIN respuesta
+  { set: 'fresh', expected: null, question: '¿Puedo usar el reloj con un móvil iPhone?', note: 'cercana: "móvil" aparece en artículos' },
+  { set: 'fresh', expected: null, question: '¿Cuántos días tarda el envío del reloj?' },
+  { set: 'fresh', expected: null, question: '¿Hay descuentos para familias numerosas?' },
+  { set: 'fresh', expected: null, question: '¿El reloj mide la tensión arterial?' },
+  { set: 'fresh', expected: null, question: '¿Se puede cambiar el idioma del reloj?' },
+  { set: 'fresh', expected: null, question: '¿Cuánto cuesta reparar la pantalla rota?', note: 'cercana: "pantalla" y "reparación" aparecen' },
+  { set: 'fresh', expected: null, question: '¿Qué hago con el reloj antiguo de mi padre que ya no funciona?', note: 'reciclaje' },
+  { set: 'fresh', expected: null, question: '¿Cómo configuro el reloj para que cuente los pasos?', note: 'adversaria: "pasos" aparece en todos los artículos' },
+  { set: 'fresh', expected: null, question: '¿Se puede cambiar el color de la esfera del reloj?' },
+  { set: 'fresh', expected: null, question: '¿Qué hago si se me pierde el reloj?' },
+  { set: 'fresh', expected: null, question: '¿Aceptan pagos con PayPal?', note: 'adversaria: "pago" aparece en suscripción' },
+  { set: 'fresh', expected: null, question: '¿Cuándo sale el modelo nuevo del reloj?' },
+  { set: 'fresh', expected: null, question: '¿El reloj funciona con la app en una tableta?', note: 'cercana: "app"' },
+  { set: 'fresh', expected: null, question: 'Necesito la factura de mi suscripción', note: 'adversaria: "suscripción" aparece' },
+]
+
+/*
+ * Segundo conjunto nuevo ("fresh2"). Se escribió DESPUÉS de ver que el sistema inventaba respuestas en "fresh"
+ * y de analizar la rejilla de umbrales (dentro de la muestra), y ANTES de decidir ningún cambio. Es la comprobación
+ * FUERA DE MUESTRA: ningún umbral ni regla se ajustó mirando estas preguntas.
+ * Incluye a propósito preguntas adversarias (vocabulario del dominio para algo que no está cubierto).
+ */
+export const FRESH2_QUESTIONS: TestQuestion[] = [
+  // ------------------------------------------------------------ CON respuesta
+  { set: 'fresh2', expected: 'reloj-sin-cobertura', question: 'El reloj no se conecta a internet' },
+  { set: 'fresh2', expected: 'reloj-se-apaga-solo', question: 'Cómo hago para que el reloj no se apague de noche' },
+  { set: 'fresh2', expected: 'emparejar-reloj-app', question: 'La app me dice que el código de vinculación ha caducado' },
+  { set: 'fresh2', expected: 'app-no-inicia-sesion', question: 'Se me ha olvidado la contraseña del correo de la cuenta' },
+  { set: 'fresh2', expected: 'reloj-sin-cobertura', question: 'El reloj muestra que no hay línea activa' },
+  { set: 'fresh2', expected: 'familiar-no-recibe-avisos-sos', question: 'Mi hijo no recibe la alerta cuando mi madre pulsa el botón rojo', note: 'sinónimo: alerta/aviso' },
+  { set: 'fresh2', expected: 'sos-no-llama', question: 'El reloj vibra pero no llama a nadie cuando aprieto el SOS' },
+  { set: 'fresh2', expected: 'ubicacion-equivocada', question: 'La ubicación del reloj sale con un círculo enorme' },
+  { set: 'fresh2', expected: 'sos-falsa-alarma', question: 'Mi madre pulsó SOS por error, ¿cómo se cancela?' },
+  { set: 'fresh2', expected: 'anadir-familiar-cambiar-titular', question: '¿Cómo se cambia el titular de la cuenta?' },
+  { set: 'fresh2', expected: 'suscripcion-caducada-pago-rechazado', question: 'El pago de este mes ha fallado' },
+  { set: 'fresh2', expected: 'cancelar-cambiar-plan', question: 'Quiero cancelar la suscripción de mi padre' },
+  { set: 'fresh2', expected: 'llamada-no-se-oye-bien', question: 'El volumen de las llamadas es muy bajo' },
+  { set: 'fresh2', expected: 'actualizacion-a-medias', question: 'La actualización no termina nunca' },
+  { set: 'fresh2', expected: 'bateria-dura-poco', question: 'No sé por qué la batería baja tan rápido' },
+  { set: 'fresh2', expected: 'anadir-familiar-cambiar-titular', question: '¿Cuántos familiares puedo añadir como máximo?', note: 'la respuesta es un dato: hasta 5' },
+
+  // ------------------------------------------------------------ SIN respuesta
+  { set: 'fresh2', expected: null, question: '¿Cuánto tiempo tarda en llegar un reloj nuevo?' },
+  { set: 'fresh2', expected: null, question: '¿Puedo pagar la suscripción en tres plazos?', note: 'adversaria: "pagar" y "suscripción"' },
+  { set: 'fresh2', expected: null, question: '¿Puedo tener dos relojes en la misma cuenta?', note: 'cercana: "cuenta"' },
+  { set: 'fresh2', expected: null, question: '¿El reloj tiene linterna?' },
+  { set: 'fresh2', expected: null, question: '¿Se puede ver el historial de ubicaciones de la semana pasada?', note: 'adversaria: "ubicaciones"' },
+  { set: 'fresh2', expected: null, question: '¿Cómo activo la detección de caídas?', note: 'cercana: dominio SOS' },
+  { set: 'fresh2', expected: null, question: '¿Puedo cambiar el número de teléfono del reloj?', note: 'adversaria: "cambiar", "teléfono"' },
+  { set: 'fresh2', expected: null, question: '¿Qué pasa si mi madre viaja al extranjero?' },
+  { set: 'fresh2', expected: null, question: '¿Se puede nadar con el reloj?' },
+  { set: 'fresh2', expected: null, question: '¿Cuántas alarmas puedo programar?', note: 'adversaria: "alarma" aparece' },
+  { set: 'fresh2', expected: null, question: '¿Tienen una versión para niños?' },
+  { set: 'fresh2', expected: null, question: '¿Cómo hablo con una persona?' },
+  { set: 'fresh2', expected: null, question: '¿Cuál es la contraseña del wifi del reloj?', note: 'adversaria: "contraseña"' },
+  { set: 'fresh2', expected: null, question: '¿El SOS llama a la policía directamente?', note: 'cercana: dominio SOS; el contenido no lo dice' },
+  { set: 'fresh2', expected: null, question: '¿Cuánto cuesta añadir un familiar más?', note: 'adversaria: "añadir familiar"' },
 ]

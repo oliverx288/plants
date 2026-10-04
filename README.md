@@ -95,7 +95,7 @@ hayas elegido y **no uses nunca contraseñas reales**.
 
 | Comando | Qué hace |
 |---|---|
-| `npm test` | Todas las pruebas (331, incluida una auditoría de accesibilidad con axe-core), sin necesidad de credenciales |
+| `npm test` | Todas las pruebas (334, incluida una auditoría de accesibilidad con axe-core), sin necesidad de credenciales |
 | `npm run reliability` | Mide la fiabilidad del asistente con 41 preguntas y muestra el porcentaje de aciertos |
 | `npm run security` | Tests de seguridad: cabeceras, secretos y arnés de intrusión |
 | `npm run reliability:live` | Lo mismo que `reliability`, contra **tu** Supabase real |
@@ -119,9 +119,20 @@ El paso 3 es una interfaz (`AnswerGenerator`): está preparada para conectar un 
 recuperación ni el umbral. La guía para hacerlo con seguridad está en
 [`docs/PROMPT-INJECTION.md`](docs/PROMPT-INJECTION.md).
 
-**Fiabilidad medida** (41 preguntas, 25 con artículo y 16 sin él; detalle en [`VALIDACION.md`](VALIDACION.md)):
-**85,4 %** de aciertos, **0 respuestas inventadas**, y cuando responde acierta el 90,5 %. Con 41 preguntas el
-intervalo de confianza es amplio (72–93 %): léelo con cautela.
+**Fiabilidad medida: lee esto con cuidado.** El asistente es **fiable en lo fácil y flojo en lo difícil**
+(detalle y método en [`VALIDACION.md`](VALIDACION.md)):
+
+| Tipo de pregunta | Aciertos | Respuestas inventadas |
+|---|---|---|
+| **Fáciles** (41 preguntas; las que no tienen artículo hablan de cosas ajenas al vocabulario del dominio: agua, garantía, precio) | **85 %** | 0 de 16 |
+| **Difíciles** (59 preguntas nuevas, con preguntas *adversarias*: vocabulario del dominio para algo que no está cubierto, como «¿Aceptan pagos con PayPal?») | **56 %** | **12 de 29 (41 %)** |
+
+Es decir: **cuando la pregunta no tiene artículo pero se parece al dominio, el asistente inventa una respuesta
+en torno al 40 % de las veces** (la «respuesta» es siempre texto literal de un artículo, con su fuente, pero de
+un artículo que no responde a la duda). Es una limitación de fondo de la búsqueda por palabras, y por eso la
+interfaz **siempre enseña la fuente** y el agente debe comprobar que el artículo corresponde a la duda.
+La solución de fondo es semántica (embeddings o un LLM como verificador, ver
+[`docs/PROMPT-INJECTION.md`](docs/PROMPT-INJECTION.md)).
 
 ## Seguridad
 
@@ -187,8 +198,11 @@ docs/          guía de prompt injection y capturas
 
 - **Búsqueda léxica:** no entiende sinónimos («señal» ≠ «cobertura») ni erratas. Es la causa de todas las
   preguntas con artículo que no encuentra en las pruebas.
-- **Pocas preguntas de prueba** (41) escritas por quien hizo el sistema: son más benévolas que las de agentes
-  reales. «0 inventadas de 16» es compatible con una tasa real de hasta ~19 %.
+- **Inventa respuestas en preguntas cercanas al dominio que no tienen artículo** (≈ 40 % en las pruebas
+  difíciles). El umbral actual es un compromiso: endurecerlo reduce las inventadas pero también responde mucho
+  menos bien a las preguntas que sí tienen artículo.
+- **Pocas preguntas de prueba**, escritas por quien hizo el sistema: son más benévolas que las de agentes
+  reales (de hecho, las primeras 41 resultaron demasiado fáciles).
 - **Sin control de concurrencia:** si dos editores guardan el mismo artículo a la vez, gana el último.
 - **Sin historial de cambios** ni auditoría de quién editó qué.
 - **Sesión en `localStorage`** (comportamiento por defecto de supabase-js): mitigado con CSP y sin HTML sin sanear.

@@ -13,7 +13,7 @@ import { parseChunk } from '../src/assistant/chunk'
 import { DEFAULT_GATE } from '../src/assistant/relevance'
 import { checkPublicKey } from '../src/lib/publicKey'
 import { collect, grade, summarize } from '../supabase/reliability/evaluate'
-import { QUESTIONS } from '../supabase/reliability/questions'
+import { FRESH2_QUESTIONS, FRESH_QUESTIONS, QUESTIONS } from '../supabase/reliability/questions'
 import { formatFailures, formatMetrics, formatSweep } from '../supabase/reliability/report'
 import { articles } from '../supabase/seed/articles'
 
@@ -54,26 +54,34 @@ async function main() {
     )
   }
 
-  const raw = await collect(async (question) => {
+  const search = async (question: string) => {
     const { data, error } = await supabase.rpc('search_knowledge', { query_text: question, max_results: 3 })
     if (error) throw new Error(`La búsqueda falló: ${error.message}`)
     return ((data ?? []) as unknown[]).map(parseChunk)
-  }, QUESTIONS)
+  }
+  const raw = await collect(search, [...QUESTIONS, ...FRESH_QUESTIONS, ...FRESH2_QUESTIONS])
+  const bySet = (...sets: string[]) => raw.filter((r) => sets.includes(r.question.set)).map((r) => grade(r))
 
-  const results = raw.map((r) => grade(r))
-  const all = summarize(results)
-  console.log(formatMetrics('TOTAL', all))
-  console.log('\nFallos:\n' + formatFailures(results))
+  const original = summarize(bySet('dev', 'test'))
+  const hard = summarize(bySet('fresh', 'fresh2'))
+  console.log('══ CASO FÁCIL: conjunto original ══\n' + formatMetrics('Original (dev + test)', original))
+  console.log('\n══ CASO DIFÍCIL: conjuntos nuevos (incluyen preguntas adversarias) ══\n' + formatMetrics('Nuevos 1 + 2', hard))
+  console.log('\nFallos del caso difícil:\n' + formatFailures(bySet('fresh', 'fresh2')))
   console.log(
-    `\nQué pasa al mover la evidencia mínima (puntuación mínima ${DEFAULT_GATE.minScore}):\n` +
+    `\nQué pasa al mover la evidencia mínima (puntuación mínima ${DEFAULT_GATE.minScore}; sobre todas las preguntas):\n` +
       formatSweep(raw, DEFAULT_GATE.minScore, [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0], DEFAULT_GATE.minMatchedWeight),
   )
 
-  if (all.falsePositives > 0) {
-    console.error(`\n✗ El asistente ha INVENTADO ${all.falsePositives} respuesta(s): se incumple la garantía principal.`)
+  // Solo el caso fácil es una garantía de regresión; el difícil es una limitación conocida y medida (VALIDACION.md §2.7).
+  if (original.falsePositives > 0) {
+    console.error(`\n✗ REGRESIÓN: en el conjunto original ahora se inventan ${original.falsePositives} respuesta(s).`)
     process.exit(1)
   }
-  console.log('\n✓ Garantía principal cumplida: ninguna pregunta sin artículo recibió respuesta.')
+  console.log(
+    `\n✓ Conjunto original: 0 inventadas (caso fácil).\n` +
+      `⚠ Caso difícil: ${hard.falsePositives} de ${hard.unanswerable} preguntas sin artículo recibieron respuesta. ` +
+      'Es una limitación conocida (VALIDACION.md §2.7); este número es el que hay que vigilar.',
+  )
 }
 
 main().catch((error) => {

@@ -9,7 +9,7 @@ cada cosa, porque no es lo mismo.
 | 🧪 **Local** | Comprobado con tests automáticos sobre un Postgres real en local (PGlite) o con un Supabase simulado. Fiable para la lógica y el SQL; no sustituye a una prueba real |
 | ⏳ **Pendiente** | Hay que ejecutarlo contra el Supabase real y pegar aquí el resultado (instrucciones incluidas) |
 
-Pruebas automáticas: **331 tests en 24 archivos**, todos en verde (`npm test`), más typecheck y lint limpios.
+Pruebas automáticas: **334 tests en 24 archivos**, todos en verde (`npm test`), más typecheck y lint limpios.
 Cada bloque de tests se validó además con **pruebas de mutación**: se rompió el código a propósito y se
 comprobó que algún test fallaba. Las mutaciones que sobrevivieron se anotan donde corresponde.
 
@@ -64,7 +64,7 @@ pasos para resolverla con el artículo citado, para resolver la llamada rápido 
 | Fiabilidad con 41 preguntas (sección 2) | ✅ Real (idéntica a la local) |
 | La respuesta es texto literal del artículo; si nada supera el umbral no se llama al generador; órdenes dentro de artículos o preguntas son datos inertes | 🧪 Local |
 
-**Limitaciones.** No entiende sinónimos ni erratas (sección 2.4). Solo devuelve un artículo (no sugiere
+**Limitaciones.** No entiende sinónimos ni erratas (sección 2.4) y, lo más importante, **inventa respuestas en ~41 % de las preguntas sin artículo cercanas al dominio** (§2.7). Solo devuelve un artículo (no sugiere
 «quizá te interese»). Sin LLM, por decisión de diseño de esta versión.
 
 ### 1.4 Preguntas sin respuesta
@@ -149,6 +149,13 @@ de accesibilidad.
 
 ## 2. Pruebas de fiabilidad
 
+> ### ⚠️ Corrección importante (leer primero)
+> Esta sección contaba inicialmente «85,4 % de aciertos y 0 respuestas inventadas». **Eso es cierto solo para el
+> conjunto original de 41 preguntas, que resultó ser el caso fácil.** Al medir con **dos conjuntos nuevos de
+> preguntas** (59 en total, escritos después, con preguntas *adversarias*) el resultado es muy distinto:
+> **56 % de aciertos y 12 de 29 preguntas sin artículo contestadas con un artículo equivocado (41 %)**. La
+> cifra «0 inventadas» **no debe citarse como garantía**. Los resultados completos están en §2.7.
+
 **Cómo se ejecuta.** `npm run reliability` (Postgres local) y `npm run reliability:live` (tu Supabase).
 Usan **la misma función de búsqueda SQL y el mismo umbral que la aplicación**.
 
@@ -227,11 +234,61 @@ margen es estrecho**: ya a 3,0 hay cuatro inventadas. Por eso el proyecto priori
    Esa propiedad la cubren los tests de SQL (`supabase/tests/search.test.ts`), que sí fallan.
 
 ### 2.6 Garantías automáticas de regresión
+*(Son garantías de «no empeorar», no objetivos de calidad. Las del caso difícil están fijadas en el nivel actual, que es malo; ver §2.7.)*
 `npm run reliability` falla si: hay **alguna respuesta inventada**; hay más de 2 respuestas con otro artículo; la
 fiabilidad de lo que responde baja del 85 %; los aciertos totales bajan del 80 % (75 % en el test retenido); la
 búsqueda sola deja de encontrar el artículo entre los 3 primeros en al menos el 85 %; o el conjunto de desarrollo
 supera en más de 15 puntos al retenido (señal de sobreajuste). Se comprobó que bajar el umbral, quitarlo, o
 quitar la ponderación por campo o por rareza hace fallar el test.
+
+### 2.7 Conjuntos nuevos y adversarios: el resultado real
+
+**Por qué existen.** El conjunto original (§2.1–2.6) se usó para calibrar el umbral y luego se «gastó» al
+diagnosticar sus fallos. Para saber si el sistema aguanta preguntas que no se han mirado, se escribieron dos
+conjuntos nuevos, **antes** de implementar nada:
+
+- **Nuevo 1** (28 preguntas: 14 con artículo, 14 sin él) y **Nuevo 2** (31: 16 con artículo, 15 sin él, escrito
+  *después* de analizar el Nuevo 1 y *antes* de decidir ningún cambio: es la comprobación **fuera de muestra**).
+- Incluyen preguntas **adversarias**: usan vocabulario del dominio para algo que no está cubierto
+  («¿Aceptan pagos con PayPal?», «¿Puedo pagar la suscripción en tres plazos?», «¿Cómo activo la detección de caídas?»).
+
+| | Preguntas | Aciertos | Con artículo (recall) | Sin artículo | **Inventadas** | Otro artículo | No encontrada |
+|---|---|---|---|---|---|---|---|
+| Original (fácil) | 41 | 85,4 % | 76 % | 100 % | **0 de 16** | 2 | 4 |
+| Nuevo 1 | 28 | 50,0 % | 42,9 % | 57,1 % | **6 de 14** | 2 | 6 |
+| Nuevo 2 (fuera de muestra) | 31 | 61,3 % | 62,5 % | 60,0 % | **6 de 15** | 3 | 3 |
+| **Nuevos 1 + 2** | **59** | **55,9 %** (IC 95 %: 43–68 %) | | | **12 de 29 (41 %)** | 5 | 9 |
+
+En el Nuevo 2, de lo que el asistente responde solo el **52,6 %** es correcto.
+
+**Por qué ocurre (diagnóstico).** El umbral mide cuánto de la pregunta coincide con un fragmento, pero **no sabe
+distinguir «palabras del tema» de «palabras de relleno»** ni «pagos» como tema de «pagos» como algo que no está
+cubierto. Ejemplos reales:
+- «¿Se puede cambiar el **idioma** del reloj?» → casa `cambi` (de «cambiar de titular») y `pued` («puede»). La palabra
+  decisiva, `idioma`, no existe en ningún artículo y aun así no frena la respuesta.
+- «¿Aceptan **pagos** con **PayPal**?» → casa `acept` («acepta la invitación») y `pag` (suscripción).
+- Palabras como `pued`, `quier`, `cuent`, `sal` o `nuev` **no son palabras vacías** para Postgres y cuentan como evidencia.
+
+**Qué se probó para arreglarlo (y por qué no se hizo).** Una rejilla de umbrales sobre las 69 preguntas vistas
+parecía resolverlo: con puntuación mínima 0,4 daba **0 inventadas**. **Fuera de muestra no se sostuvo:**
+
+| Umbral (Nuevo 2, fuera de muestra) | Aciertos | Inventadas (de 15) | Con artículo respondidas bien |
+|---|---|---|---|
+| Actual (puntuación ≥ 0,2) | 61,3 % | **6** | 62,5 % |
+| Candidato (puntuación ≥ 0,4) | 58,1 % | 2 | **31,3 %** |
+
+El «0 inventadas» del candidato era **sobreajuste**: dentro de la muestra daba 0, fuera da 2, y a cambio se pierde
+la mitad de las respuestas correctas. Con búsqueda por palabras, **la fiabilidad se compra con cobertura**.
+
+**Conclusión.** Con la tecnología de esta versión (búsqueda léxica, sin LLM) **no se puede cumplir «nunca
+inventa» para preguntas sin artículo cercanas al dominio**. Mitigaciones existentes: se cita siempre la fuente (el
+agente ve de qué artículo sale), las respuestas son texto literal y existe la valoración «¿Te sirvió?» para medir
+el problema con uso real. La solución de fondo es **semántica** (embeddings o un LLM como verificador con las
+defensas de [`docs/PROMPT-INJECTION.md`](docs/PROMPT-INJECTION.md)).
+
+**Limitaciones de esta medición.** Las preguntas las escribió quien hizo el sistema (y sabía qué buscaba); 29
+preguntas sin artículo dan un intervalo muy ancho (la tasa real de inventadas podría estar entre ~25 % y ~59 %);
+el Nuevo 1 ya se miró fallo a fallo, así que solo el Nuevo 2 es estrictamente fuera de muestra.
 
 ---
 
@@ -352,6 +409,6 @@ la pregunta (propiedad que detectó una mutación que sobrevivía). El diseño p
 | Sin MFA para la cuenta de editor | Pendiente | Activarlo si se usa en serio |
 | Sin historial de cambios de artículos | Pendiente | Tabla de auditoría (`articles_history`) |
 | Concurrencia entre editores | Pendiente | Control optimista con `updated_at` |
-| Tasa real de «inventar» no acotada con precisión | Limitación de la medición (§2.5) | Ampliar las preguntas sin respuesta con casos reales |
+| **Respuestas inventadas (≈ 41 %) en preguntas sin artículo cercanas al dominio** | **Problema conocido y medido (§2.7)** | Valoración «¿Te sirvió?» para medirlo con uso real; la solución de fondo es semántica (embeddings o LLM verificador) |
 | Búsqueda léxica | Limitación conocida | Tabla de sinónimos; después, embeddings o un LLM con las defensas de `docs/PROMPT-INJECTION.md` |
 | Credenciales de demo en un README público | Decisión de la autora | Que sean de demo, nunca reales |
