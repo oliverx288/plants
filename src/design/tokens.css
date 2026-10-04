@@ -1,0 +1,74 @@
+/*
+ * Tokens de diseño de Faro (única fuente de verdad).
+ * Los componentes NUNCA usan valores sueltos: siempre var(--...).
+ * Contrastes medidos contra WCAG 2.2 AA (texto normal >= 4.5:1, UI >= 3:1).
+ */
+:root {
+  /* Color: marca (azul verdoso, tranquilo) */
+  --color-brand-50: #e8f4f5;
+  --color-brand-100: #cfe8ea;
+  --color-brand-600: #1f6f78; /* 5.8:1 sobre blanco */
+  --color-brand-700: #185a62; /* 7.8:1 sobre blanco */
+  --color-brand-800: #124850;
+
+  /* Color: neutros */
+  --color-bg: #f6f9f9;
+  --color-surface: #ffffff;
+  --color-border: #b9c7cb; /* 1.7:1 decorativo; los controles usan --color-border-strong */
+  --color-border-strong: #6b7f86; /* 4.2:1: borde de controles (>= 3:1) */
+  --color-text: #17262d; /* 15.5:1 sobre blanco */
+  --color-text-muted: #455a63; /* 7.2:1 sobre blanco */
+
+  /* Color: estados (texto sobre su fondo >= 4.5:1) */
+  --color-success-bg: #e5f4ea;
+  --color-success-text: #14532d;
+  --color-success-border: #2f8f56;
+  --color-warning-bg: #fff4d6;
+  --color-warning-text: #6b4200;
+  --color-warning-border: #b7791f;
+  --color-danger-bg: #fdeaea;
+  --color-danger-text: #8f1d1d;
+  --color-danger-border: #c0392b;
+  --color-info-bg: var(--color-brand-50);
+  --color-info-text: var(--color-brand-800);
+  --color-info-border: var(--color-brand-600);
+
+  --color-focus: #0b5cad; /* anillo de foco, 6.3:1 o más sobre fondos claros */
+
+  /* Tipografía: pila del sistema (sin cargar fuentes externas) */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --text-sm: 0.9375rem; /* 15px */
+  --text-base: 1.125rem; /* 18px: base grande, pensada para legibilidad */
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 1.875rem;
+  --leading-tight: 1.25;
+  --leading-normal: 1.6;
+  --weight-regular: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Espaciado (escala de 4px) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  /* Forma y elevación */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --shadow-sm: 0 1px 2px rgb(23 38 45 / 0.08);
+  --shadow-md: 0 4px 12px rgb(23 38 45 / 0.1);
+
+  /* Interacción */
+  --target-min: 2.75rem; /* 44px: tamaño mínimo táctil */
+  --container-max: 64rem;
+  --transition: 150ms ease;
+}
