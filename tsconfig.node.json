@@ -10,5 +10,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["vite.config.ts", "supabase/tests"]
+  "include": ["vite.config.ts", "supabase/tests", "supabase/seed", "scripts"]
 }
