@@ -15,6 +15,7 @@ export function formatMetrics(title: string, m: Metrics): string {
     `  Fiabilidad de las respuestas  ${f(m.answerPrecision)}   (de lo que responde, cuánto es correcto)`,
     `  Errores: ${m.falsePositives} inventadas (sin artículo) · ${m.wrongAnswers} con otro artículo · ${m.missed} no encontradas`,
     `  Tasa REAL posible de respuestas inventadas: hasta ${fpHi.toFixed(0)} % (observadas ${m.falsePositives} de ${m.unanswerable}; intervalo 95 %)`,
+    `  Sugerencias por empate: ${m.rescuedBySuggestions} de las no encontradas incluían el artículo correcto · ${m.suggestionsOnUnanswerable} preguntas sin artículo recibieron sugerencias`,
     `  Búsqueda sola, sin umbral: acierta a la 1ª ${f(m.hitAt1)} · entre las 3 primeras ${f(m.hitAt3)}`,
   ].join('\n')
 }

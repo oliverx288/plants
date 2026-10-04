@@ -145,6 +145,38 @@ describe('asistente: respuesta con fuente', () => {
   })
 })
 
+describe('asistente: empate entre artículos ("batería")', () => {
+  const tied = (id: string, title: string) =>
+    row({ article_id: id, article_title: title, score: 1, matched_weight: 1.7, matched_terms: 1, query_terms: 1 })
+
+  it('ofrece los artículos como enlaces, sin pasos, sin "Respuesta" y sin guardar la pregunta', async () => {
+    fake.state.search = () =>
+      ok([tied('id-1', 'La batería dura poco'), tied('id-2', 'El reloj se apaga solo con batería disponible')])
+    const { container } = open()
+    await ask('bateria')
+
+    expect(await screen.findByText('Varios artículos podrían servir')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'La batería dura poco' }).getAttribute('href')).toBe('/articulos/id-1#seccion-1')
+    expect(screen.getByRole('link', { name: 'El reloj se apaga solo con batería disponible' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'Respuesta' })).toBeNull()
+    expect(screen.queryByText('Comprueba que el reloj tiene el GPS activado.')).toBeNull()
+    expect(screen.queryByText('No tengo información sobre esto')).toBeNull()
+    expect(fake.client.rpc).not.toHaveBeenCalledWith('log_unanswered_question', expect.anything())
+    expect(await a11yViolations(container)).toEqual([])
+  })
+
+  it('una sola palabra con un único artículo claro ("no enciende") sí responde', async () => {
+    fake.state.search = () =>
+      ok([
+        row({ score: 1, matched_weight: 2.8, matched_terms: 1, query_terms: 1 }),
+        row({ article_id: 'otro', score: 0.6, matched_weight: 1.7, matched_terms: 1, query_terms: 1 }),
+      ])
+    open()
+    await ask('no enciende')
+    expect(await screen.findByRole('heading', { name: 'Respuesta' })).toBeTruthy()
+  })
+})
+
 describe('asistente: "No tengo información sobre esto"', () => {
   it('sin resultados: avisa, guarda la pregunta y lo dice', async () => {
     fake.state.search = () => ok([])

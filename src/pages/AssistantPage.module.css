@@ -70,3 +70,12 @@
 .verify a {
   color: var(--color-brand-800);
 }
+
+.suggestions {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+}
+
+.suggestions li + li {
+  margin-top: var(--space-1);
+}

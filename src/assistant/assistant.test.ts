@@ -5,7 +5,8 @@ import type { AssistantDeps } from './ask'
 import { ExtractiveAnswerGenerator } from './generator'
 import { normalizeQuestion } from './question'
 import {
-  COMPLETE_MATCH, DEFAULT_GATE, MIN_MATCHED_WEIGHT, MIN_SCORE, WEAK_MATCH_SCORE, isCompleteMatch, isRelevant, isWeakMatch, selectRelevant,
+  COMPLETE_MATCH, DEFAULT_GATE, MAX_SUGGESTIONS, MIN_MATCHED_WEIGHT, MIN_SCORE, WEAK_MATCH_SCORE, isCompleteMatch, isRelevant, isWeakMatch,
+  selectRelevant, selectSuggestions,
 } from './relevance'
 import { parseChunk } from './chunk'
 import type { AnswerGenerator, RetrievedChunk } from './types'
@@ -64,9 +65,33 @@ describe('coincidencia completa (consultas cortas y precisas)', () => {
     expect(selectRelevant([complete(), nextOk])).toHaveLength(1)
   })
 
-  it('NO se acepta una palabra suelta, aunque coincida al 100 % ("reloj", "SOS")', () => {
-    expect(isCompleteMatch(complete({ matchedTerms: 1, queryTerms: 1, matchedWeight: 0.8 }), nextOk)).toBe(false)
-    expect(isCompleteMatch(complete({ matchedTerms: 1, queryTerms: 1, matchedWeight: 3 }), nextOk)).toBe(false)
+  describe('un solo término significativo ("no enciende": "no" es palabra vacía)', () => {
+    // El término está en el título de este artículo y solo en el cuerpo de los demás (0,6): margen 0,4.
+    const single = (over: Partial<RetrievedChunk> = {}) =>
+      chunk({ score: 1, matchedWeight: 2.8, matchedTerms: 1, queryTerms: 1, ...over })
+    const rival = (score: number) => chunk({ articleId: 'otro', score, matchedWeight: 1.5, matchedTerms: 1, queryTerms: 1 })
+
+    it('se acepta si gana con claridad (margen ≥ 0,3)', () => {
+      expect(isCompleteMatch(single(), rival(0.6))).toBe(true)
+      expect(isCompleteMatch(single(), rival(0.7))).toBe(true) // margen exacto 0,3
+      expect(selectRelevant([single(), rival(0.6)])).toHaveLength(1)
+    })
+
+    it('NO se acepta con margen menor: exige más margen que con varios términos', () => {
+      expect(isCompleteMatch(single(), rival(0.71))).toBe(false)
+      expect(isCompleteMatch(single(), rival(0.9))).toBe(false) // con 2 términos 0,9 tampoco, pero 0,8 sí
+      expect(isCompleteMatch(complete(), rival(0.8))).toBe(true)
+      expect(isCompleteMatch(single(), rival(0.8))).toBe(false)
+    })
+
+    it('NO se acepta una palabra genérica (poca evidencia: "reloj", aparece en muchos artículos)', () => {
+      expect(isCompleteMatch(single({ matchedWeight: 1.4 }), rival(0.5))).toBe(false)
+      expect(isCompleteMatch(single({ matchedWeight: 1.5 }), rival(0.5))).toBe(true)
+    })
+
+    it('NO se acepta si no coincide en el título', () => {
+      expect(isCompleteMatch(single({ score: 0.6 }), rival(0.1))).toBe(false)
+    })
   })
 
   it('NO se acepta si falta alguna palabra de la pregunta por coincidir', () => {
@@ -75,7 +100,12 @@ describe('coincidencia completa (consultas cortas y precisas)', () => {
 
   // Los límites se fijan con VALORES LITERALES (no con la constante): así cambiar la política obliga a cambiar el test.
   it('la política tiene los valores acordados', () => {
-    expect(COMPLETE_MATCH).toEqual({ minScore: 0.9, minTerms: 2, minWeight: 2.0, minMargin: 0.1 })
+    expect(COMPLETE_MATCH).toEqual({
+      minScore: 0.9,
+      multi: { minTerms: 2, minWeight: 2.0, minMargin: 0.1 },
+      single: { minWeight: 1.5, minMargin: 0.3 },
+    })
+    expect(MAX_SUGGESTIONS).toBe(3)
   })
 
   it('NO se acepta si no coincide en el título (puntuación < 0,9)', () => {
@@ -118,6 +148,31 @@ describe('coincidencia completa (consultas cortas y precisas)', () => {
   it('no ablanda la vía general: una pregunta que no es completa sigue necesitando la evidencia de siempre', () => {
     expect(isRelevant(chunk({ score: 0.5, matchedWeight: 3.4 }), DEFAULT_GATE, nextOk)).toBe(false)
     expect(isRelevant(chunk({ score: 0.5, matchedWeight: 3.5 }), DEFAULT_GATE, nextOk)).toBe(true)
+  })
+})
+
+describe('sugerencias cuando hay empate ("batería" → dos artículos)', () => {
+  const tied = (id: string, over: Partial<RetrievedChunk> = {}) =>
+    chunk({ articleId: id, score: 1, matchedWeight: 1.7, matchedTerms: 1, queryTerms: 1, ...over })
+
+  it('con 2 o más artículos que coinciden igual de bien, los ofrece (máximo 3)', () => {
+    expect(selectSuggestions([tied('a'), tied('b')]).map((c) => c.articleId)).toEqual(['a', 'b'])
+    expect(selectSuggestions([tied('a'), tied('b'), tied('c'), tied('d')])).toHaveLength(3)
+  })
+
+  it('con un solo candidato no hay nada que sugerir (o responde, o no sabe)', () => {
+    expect(selectSuggestions([tied('a'), tied('b', { score: 0.6 })])).toEqual([])
+    expect(selectSuggestions([])).toEqual([])
+  })
+
+  it('un candidato que no coincide del todo, o con evidencia trivial, no se sugiere', () => {
+    expect(selectSuggestions([tied('a'), tied('b', { matchedWeight: 1.4 })])).toEqual([])
+    expect(selectSuggestions([tied('a'), tied('b', { matchedTerms: 0, queryTerms: 1 })])).toEqual([])
+    expect(selectSuggestions([tied('a'), tied('b', { matchedTerms: 0, queryTerms: 0 })])).toEqual([])
+  })
+
+  it('solo cuentan los que empatan con el primero (margen < 0,1)', () => {
+    expect(selectSuggestions([tied('a'), tied('b', { score: 0.95 }), tied('c', { score: 0.9 })]).map((c) => c.articleId)).toEqual(['a', 'b'])
   })
 })
 
@@ -298,6 +353,21 @@ describe('ask (flujo completo)', () => {
     const deps = makeDeps({ retrieve: vi.fn().mockResolvedValue([chunk({ score: 0.1 })]) })
     expect(await ask('¿Cuánto cuesta?', deps)).toEqual({ status: 'no-info', logged: true })
     expect(deps.generator.generate).not.toHaveBeenCalled()
+  })
+
+  it('con un empate entre artículos devuelve sugerencias, no responde y NO guarda la pregunta como "sin respuesta"', async () => {
+    const tied = (id: string, title: string) =>
+      chunk({ articleId: id, articleTitle: title, score: 1, matchedWeight: 1.7, matchedTerms: 1, queryTerms: 1 })
+    const deps = makeDeps({ retrieve: vi.fn().mockResolvedValue([tied('a', 'Batería A'), tied('b', 'Batería B')]) })
+    expect(await ask('bateria', deps)).toEqual({
+      status: 'suggestions',
+      candidates: [
+        { articleId: 'a', articleTitle: 'Batería A', category: 'GPS y ubicación', sectionPosition: 1 },
+        { articleId: 'b', articleTitle: 'Batería B', category: 'GPS y ubicación', sectionPosition: 1 },
+      ],
+    })
+    expect(deps.generator.generate).not.toHaveBeenCalled()
+    expect(deps.logUnanswered).not.toHaveBeenCalled()
   })
 
   it('si el generador no produce respuesta, también cuenta como "sin respuesta"', async () => {

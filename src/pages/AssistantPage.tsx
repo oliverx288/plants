@@ -64,6 +64,23 @@ function AnswerCard({ result, question }: { result: Extract<AskResult, { status:
   )
 }
 
+/** Empate entre varios artículos: no se responde con ninguno; solo título y enlace (sin pasos) para que el agente elija. */
+function SuggestionsCard({ candidates }: { candidates: Extract<AskResult, { status: 'suggestions' }>['candidates'] }) {
+  return (
+    <Alert tone="info" title="Varios artículos podrían servir">
+      <p>No sé cuál de estos corresponde a la duda. Abre el que encaje o describe el problema con algo más de detalle:</p>
+      <ul className={styles.suggestions}>
+        {candidates.map((c) => (
+          <li key={c.articleId}>
+            <Link to={`/articulos/${c.articleId}#seccion-${c.sectionPosition}`}>{c.articleTitle}</Link>
+            <span className={styles.category}> · {c.category}</span>
+          </li>
+        ))}
+      </ul>
+    </Alert>
+  )
+}
+
 export function AssistantPage() {
   const [text, setText] = useState('')
   const [fieldError, setFieldError] = useState<string | undefined>()
@@ -144,6 +161,8 @@ export function AssistantPage() {
             </p>
             {view.result.status === 'answer' ? (
               <AnswerCard result={view.result} question={view.question} />
+            ) : view.result.status === 'suggestions' ? (
+              <SuggestionsCard candidates={view.result.candidates} />
             ) : (
               <Alert tone="warning" title="No tengo información sobre esto">
                 <p>Ningún artículo de la base de conocimiento cubre esta duda.</p>

@@ -48,31 +48,55 @@ export interface Gate {
 export const DEFAULT_GATE: Gate = { minScore: MIN_SCORE, minMatchedWeight: MIN_MATCHED_WEIGHT, completeMatch: true }
 
 /**
- * "Coincidencia completa": segunda vía para consultas CORTAS y PRECISAS como "el reloj no carga".
+ * "Coincidencia completa": segunda vía para consultas CORTAS y PRECISAS como "el reloj no carga" o "no enciende".
  *
  * Una consulta así coincide al 100 % con el título de un artículo, pero tiene pocas palabras y por eso suma poca
- * evidencia absoluta: el umbral general (MIN_MATCHED_WEIGHT) la rechazaba. En las pruebas de consultas cortas, 5 de
- * las 6 que no encontraba tenían puntuación 1,00 y el artículo correcto en primer lugar.
+ * evidencia absoluta: el umbral general (MIN_MATCHED_WEIGHT) la rechazaba.
  *
  * Para no reabrir las respuestas inventadas, se exige TODO esto a la vez:
  *  - todos los términos significativos de la pregunta coinciden (y no es una consulta vacía);
- *  - son al menos 2 (una palabra suelta, "reloj" o "SOS", sigue rechazada);
  *  - puntuación ≥ 0,9, es decir, coinciden en el título;
- *  - una evidencia mínima baja, solo para descartar combinaciones triviales;
- *  - SIN EMPATE: el siguiente artículo queda al menos 0,1 por debajo. Si dos artículos coinciden igual de bien,
- *    no hay forma de saber cuál es (p. ej. "el SOS no llama" empata con "nadie contesta el SOS") y no se responde.
+ *  - una evidencia mínima, solo para descartar combinaciones triviales;
+ *  - SIN EMPATE: el siguiente artículo queda por debajo con un margen mínimo. Si dos artículos coinciden igual de
+ *    bien no hay forma de saber cuál es y no se responde (se ofrecen como sugerencias: ver selectSuggestions).
+ *
+ * Con UN solo término significativo ("no enciende"; "no" es palabra vacía) hay mucha menos información, así que el
+ * margen exigido es mayor: el término tiene que estar en el título de un único artículo y, como mucho, en el
+ * cuerpo de los demás (puntuación 0,6). Una palabra genérica ("reloj") aparece en muchos títulos y no pasa.
  */
-export const COMPLETE_MATCH = { minScore: 0.9, minTerms: 2, minWeight: 2.0, minMargin: 0.1 } as const
+export const COMPLETE_MATCH = {
+  minScore: 0.9,
+  multi: { minTerms: 2, minWeight: 2.0, minMargin: 0.1 },
+  single: { minWeight: 1.5, minMargin: 0.3 },
+} as const
 
-export function isCompleteMatch(chunk: RetrievedChunk, next?: RetrievedChunk): boolean {
+function isCompleteCandidate(chunk: RetrievedChunk): boolean {
+  const tier = chunk.queryTerms === 1 ? COMPLETE_MATCH.single : COMPLETE_MATCH.multi
   return (
-    chunk.queryTerms >= COMPLETE_MATCH.minTerms &&
+    chunk.queryTerms >= 1 &&
     chunk.matchedTerms === chunk.queryTerms &&
     chunk.score >= COMPLETE_MATCH.minScore &&
-    chunk.matchedWeight >= COMPLETE_MATCH.minWeight &&
-    // 1e-9: tolerancia de coma flotante (1 - 0,9 da 0,0999…), para que un margen exacto de 0,1 cuente.
-    (next === undefined || chunk.score - next.score >= COMPLETE_MATCH.minMargin - 1e-9)
+    chunk.matchedWeight >= tier.minWeight
   )
+}
+
+export function isCompleteMatch(chunk: RetrievedChunk, next?: RetrievedChunk): boolean {
+  if (!isCompleteCandidate(chunk)) return false
+  const { minMargin } = chunk.queryTerms === 1 ? COMPLETE_MATCH.single : COMPLETE_MATCH.multi
+  // 1e-9: tolerancia de coma flotante (1 - 0,9 da 0,0999…), para que un margen exacto de 0,1 cuente.
+  return next === undefined || chunk.score - next.score >= minMargin - 1e-9
+}
+
+/**
+ * Empate entre artículos: varios coinciden por completo y ninguno gana con claridad ("batería" → "La batería dura
+ * poco" y "Se apaga solo con batería disponible"). No se responde con ninguno, pero tampoco se dice "no sé": se
+ * ofrecen como SUGERENCIAS (solo título y enlace, sin pasos) para que el agente elija. Hacen falta al menos 2.
+ */
+export const MAX_SUGGESTIONS = 3
+
+export function selectSuggestions(chunks: RetrievedChunk[]): RetrievedChunk[] {
+  const tied = chunks.filter((c) => isCompleteCandidate(c) && chunks[0].score - c.score < COMPLETE_MATCH.multi.minMargin - 1e-9)
+  return tied.length >= 2 ? tied.slice(0, MAX_SUGGESTIONS) : []
 }
 
 /** Vía general: puntuación y evidencia suficientes. */

@@ -1,4 +1,4 @@
-import { DEFAULT_GATE, selectRelevant } from '../../src/assistant/relevance'
+import { DEFAULT_GATE, selectRelevant, selectSuggestions } from '../../src/assistant/relevance'
 import type { Gate } from '../../src/assistant/relevance'
 import type { RetrievedChunk } from '../../src/assistant/types'
 import { articles } from '../seed/articles'
@@ -17,6 +17,8 @@ export interface QuestionResult {
   status: Status
   /** Artículo con el que responde el asistente (tras el umbral), o null si dice "No tengo información". */
   answeredWith: string | null
+  /** Artículos que se ofrecen como sugerencia (empate) cuando no se responde; vacío si no hay empate. */
+  suggested: string[]
   /** Mejor artículo según la búsqueda, ANTES de aplicar el umbral. */
   topRaw: string | null
   topScore: number
@@ -55,10 +57,13 @@ export function grade({ question, chunks }: RawResult, gate: Gate = DEFAULT_GATE
   else if (answeredWith === null) status = 'missed'
   else status = answeredWith === question.expected ? 'ok' : 'wrong-answer'
 
+  const suggested = answeredWith === null ? selectSuggestions(chunks).map((c) => slugOf(c.articleId) ?? c.articleId) : []
+
   return {
     question,
     status,
     answeredWith,
+    suggested,
     topRaw: slugOf(chunks[0]?.articleId),
     topScore: chunks[0]?.score ?? 0,
     topWeight: chunks[0]?.matchedWeight ?? 0,
@@ -88,6 +93,10 @@ export interface Metrics {
   wrongAnswers: number
   falsePositives: number
   /** Búsqueda sola (sin umbral): % de las que tienen artículo cuyo artículo sale el primero / entre los 3 primeros. */
+  /** No respondió pero ofreció sugerencias que incluyen el artículo correcto (ayuda real aunque cuente como "no encontrada"). */
+  rescuedBySuggestions: number
+  /** Preguntas SIN artículo a las que aun así ofreció sugerencias (ruido: el agente verá artículos que no encajan). */
+  suggestionsOnUnanswerable: number
   hitAt1: number
   hitAt3: number
 }
@@ -113,6 +122,8 @@ export function summarize(results: QuestionResult[]): Metrics {
     missed: count(results, 'missed'),
     wrongAnswers: count(results, 'wrong-answer'),
     falsePositives: count(results, 'false-positive'),
+    rescuedBySuggestions: answerable.filter((r) => r.status === 'missed' && r.suggested.includes(r.question.expected!)).length,
+    suggestionsOnUnanswerable: unanswerable.filter((r) => r.suggested.length > 0).length,
     hitAt1: pct(answerable.filter((r) => r.rawRank === 1).length, answerable.length),
     hitAt3: pct(answerable.filter((r) => r.rawRank !== null).length, answerable.length),
   }
