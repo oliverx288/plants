@@ -1,8 +1,6 @@
-import { readFileSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
-import { PGlite } from '@electric-sql/pglite'
 import { describe, expect, it } from 'vitest'
 import { articles } from './articles'
+import { createTestDb } from '../tests/helpers'
 import { articleId } from './ids'
 
 const allText = (a: (typeof articles)[number]) =>
@@ -51,18 +49,7 @@ describe('contenido de la base de conocimiento', () => {
 
 describe('el contenido cumple las restricciones reales de la base de datos', () => {
   it('se insertan los artículos y secciones en el esquema de las migraciones', async () => {
-    const db = new PGlite()
-    await db.exec(`
-      create schema auth;
-      create table auth.users (id uuid primary key);
-      create function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;
-    `)
-    const dir = join(__dirname, '..', 'migrations')
-    for (const file of readdirSync(dir).sort()) {
-      // Las migraciones de RLS usan roles de Supabase que aquí no hacen falta para validar CHECKs.
-      if (file.includes('rls')) continue
-      await db.exec(readFileSync(join(dir, file), 'utf8'))
-    }
+    const db = await createTestDb()
 
     for (const a of articles) {
       await db.query('insert into public.articles (id, title, category, last_reviewed_at) values ($1,$2,$3,$4)', [

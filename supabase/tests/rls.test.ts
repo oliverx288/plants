@@ -1,7 +1,6 @@
-import { readFileSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
-import { PGlite } from '@electric-sql/pglite'
+import type { PGlite } from '@electric-sql/pglite'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { createTestDb } from './helpers'
 
 /*
  * Pruebas de esquema y RLS sobre un Postgres real (PGlite) en local.
@@ -15,8 +14,6 @@ const NURIA = '00000000-0000-4000-8000-000000000002' // editora
 const GHOST = '00000000-0000-4000-8000-000000000003' // existe en Auth pero sin perfil
 const ARTICLE = '10000000-0000-4000-8000-000000000001'
 const SECTION = '20000000-0000-4000-8000-000000000001'
-
-const MIGRATIONS_DIR = join(__dirname, '..', 'migrations')
 
 let db: PGlite
 
@@ -46,23 +43,7 @@ const CHECK_VIOLATION = '23514'
 const UNIQUE_VIOLATION = '23505'
 
 beforeAll(async () => {
-  db = new PGlite()
-  await db.exec(`
-    create role anon nologin;
-    create role authenticated nologin;
-    create schema auth;
-    create table auth.users (id uuid primary key);
-    create function auth.uid() returns uuid language sql stable
-      as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
-    grant usage on schema public, auth to anon, authenticated;
-    grant execute on function auth.uid() to anon, authenticated;
-    -- Supabase concede todo por defecto en 'public': nuestras migraciones deben recortarlo.
-    alter default privileges in schema public grant all on tables to anon, authenticated;
-    alter default privileges in schema public grant all on functions to anon, authenticated;
-  `)
-  for (const file of readdirSync(MIGRATIONS_DIR).sort()) {
-    await db.exec(readFileSync(join(MIGRATIONS_DIR, file), 'utf8'))
-  }
+  db = await createTestDb()
   await db.exec(`
     insert into auth.users (id) values ('${LUCIA}'), ('${NURIA}'), ('${GHOST}');
     insert into public.profiles (id, role, display_name) values
