@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -233,8 +233,8 @@ describe('asistente: validación y errores', () => {
 
     expect(await screen.findByRole('link', { name: 'Respuesta NUEVA' })).toBeTruthy()
     releaseFirst() // llega tarde la primera
-    await waitFor(() => expect(within(screen.getByRole('article')).getByRole('link').textContent).toBe('Respuesta NUEVA'))
-    expect(screen.queryByText('Respuesta ANTIGUA')).toBeNull()
+    await waitFor(() => expect(screen.getByRole('article').textContent).toContain('Respuesta NUEVA'))
+    expect(screen.queryByText(/Respuesta ANTIGUA/)).toBeNull()
   })
 })
 
@@ -339,5 +339,54 @@ describe('asistente: valoración de la respuesta', () => {
     await user.click(screen.getByRole('button', { name: 'Preguntar' }))
     await waitFor(() => expect(screen.getByRole('button', { name: 'Sí, me sirvió' }).getAttribute('aria-pressed')).toBe('false'))
     expect(screen.queryByText('Gracias por tu valoración.')).toBeNull()
+  })
+})
+
+describe('asistente: aviso de comprobación (el artículo puede no corresponder a la duda)', () => {
+  it('SIEMPRE encabeza la respuesta con el artículo y pide comprobar que corresponde a la duda', async () => {
+    open()
+    await ask('la ubicación no se actualiza')
+    await screen.findByRole('heading', { name: 'Respuesta' })
+
+    expect(screen.getByText(/Antes de seguir los pasos, comprueba que corresponde a la duda del cliente/)).toBeTruthy()
+    const top = screen.getByRole('link', { name: /«La ubicación no se actualiza»/ })
+    expect(top.getAttribute('href')).toBe('/articulos/10000000-0000-4000-8000-000000000001#seccion-1')
+  })
+
+  it('con una coincidencia fuerte NO hay aviso de coincidencia débil', async () => {
+    fake.state.search = () => ok([row({ score: 0.8 })])
+    open()
+    await ask('la ubicación no se actualiza')
+    await screen.findByRole('heading', { name: 'Respuesta' })
+    expect(screen.queryByText('Coincidencia débil')).toBeNull()
+  })
+
+  it('con una coincidencia débil (puntuación < 0,4) aparece un aviso adicional más fuerte', async () => {
+    fake.state.search = () => ok([row({ score: 0.3 })])
+    open()
+    await ask('la ubicación no se actualiza')
+    expect(await screen.findByText('Coincidencia débil')).toBeTruthy()
+    expect(screen.getByText(/Es más probable que este artículo no sea el que buscas/)).toBeTruthy()
+    expect(screen.getByRole('alert').textContent).toContain('Coincidencia débil')
+  })
+
+  it('NUNCA muestra un mensaje de "alta confianza" o de seguridad (la banda alta también falla)', async () => {
+    for (const score of [0.3, 0.8, 1]) {
+      fake.state.search = () => ok([row({ score })])
+      const { unmount } = open()
+      await ask('la ubicación no se actualiza')
+      await screen.findByRole('heading', { name: 'Respuesta' })
+      const text = screen.getByRole('article').textContent ?? ''
+      expect(text, `puntuación ${score}`).not.toMatch(/alta confianza|coincidencia fuerte|seguro|garantiz|correcta con seguridad/i)
+      unmount()
+    }
+  })
+
+  it('la respuesta con coincidencia débil sigue siendo accesible (axe)', async () => {
+    fake.state.search = () => ok([row({ score: 0.3 })])
+    open()
+    await ask('la ubicación no se actualiza')
+    await screen.findByText('Coincidencia débil')
+    expect(await a11yViolations()).toEqual([])
   })
 })

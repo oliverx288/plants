@@ -30,7 +30,13 @@ export interface AnswerSource {
 }
 
 export type Answer =
-  | { kind: 'answer'; source: AnswerSource; sections: AnswerSection[] }
+  | {
+      kind: 'answer'
+      source: AnswerSource
+      sections: AnswerSection[]
+      /** Coincidencia débil: la interfaz avisa con más énfasis. Nunca significa lo contrario ("alta confianza"). */
+      weakMatch: boolean
+    }
   | { kind: 'no-info' }
 
 /**

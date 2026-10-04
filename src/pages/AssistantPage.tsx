@@ -15,12 +15,27 @@ type View =
   | { status: 'error'; question: string }
 
 function AnswerCard({ result, question }: { result: Extract<AskResult, { status: 'answer' }>; question: string }) {
-  const { source, sections } = result.answer
+  const { source, sections, weakMatch } = result.answer
+  const articleLink = `/articulos/${source.articleId}#seccion-${sections[0].position}`
   return (
     <Card as="article" aria-labelledby="respuesta-titulo">
       <h2 id="respuesta-titulo" className={styles.answerTitle}>
         Respuesta
       </h2>
+
+      {/* El asistente puede equivocarse de artículo (ver VALIDACION.md §2.7): se pide comprobarlo SIEMPRE. */}
+      <p className={styles.verify}>
+        <strong>Respuesta del artículo</strong> <Link to={articleLink}>«{source.articleTitle}»</Link>
+        <span className={styles.category}> · {source.category}</span>.<br />
+        Antes de seguir los pasos, comprueba que corresponde a la duda del cliente.
+      </p>
+
+      {weakMatch && (
+        <Alert tone="warning" title="Coincidencia débil" style={{ marginBottom: 'var(--space-4)' }}>
+          Es más probable que este artículo no sea el que buscas. Léelo con especial atención antes de dar los pasos
+          al cliente, y si no encaja, consulta <Link to="/articulos">los artículos</Link>.
+        </Alert>
+      )}
 
       {/* Texto literal de los artículos: nunca se reescribe ni se interpreta como HTML. */}
       {sections.map((section) => (
@@ -39,7 +54,7 @@ function AnswerCard({ result, question }: { result: Extract<AskResult, { status:
 
       <p className={styles.source}>
         <strong>Fuente:</strong>{' '}
-        <Link to={`/articulos/${source.articleId}#seccion-${sections[0].position}`}>{source.articleTitle}</Link>
+        <Link to={articleLink}>{source.articleTitle}</Link>
         <span className={styles.category}> · {source.category}</span>
       </p>
 

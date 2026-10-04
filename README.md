@@ -35,7 +35,7 @@ Los tres principios del proyecto:
 | ![Login](docs/screenshots/01-login.png) **Login** | ![Sin información](docs/screenshots/03-asistente-sin-informacion.png) **«No tengo información»** (y se guarda la pregunta) |
 | ![Artículos](docs/screenshots/04-articulos.png) **Artículos por categoría** | ![Detalle](docs/screenshots/05-articulo-detalle.png) **Detalle**, con la sección citada resaltada |
 | ![Editor](docs/screenshots/06-editor-formulario.png) **Editor** (solo rol editor) | ![Preguntas](docs/screenshots/07-preguntas-sin-respuesta.png) **Preguntas sin respuesta**, agrupadas |
-| ![Valoraciones](docs/screenshots/09-valoraciones.png) **Valoraciones** de las respuestas (solo editor) | |
+| ![Valoraciones](docs/screenshots/09-valoraciones.png) **Valoraciones** de las respuestas (solo editor) | ![Coincidencia débil](docs/screenshots/10-coincidencia-debil.png) **Aviso de coincidencia débil** |
 
 <p align="center"><img src="docs/screenshots/08-movil-asistente.png" alt="Versión móvil" width="260"><br>Responsive (390 px)</p>
 
@@ -95,7 +95,7 @@ hayas elegido y **no uses nunca contraseñas reales**.
 
 | Comando | Qué hace |
 |---|---|
-| `npm test` | Todas las pruebas (334, incluida una auditoría de accesibilidad con axe-core), sin necesidad de credenciales |
+| `npm test` | Todas las pruebas (342, incluida una auditoría de accesibilidad con axe-core), sin necesidad de credenciales |
 | `npm run reliability` | Mide la fiabilidad del asistente con 41 preguntas y muestra el porcentaje de aciertos |
 | `npm run security` | Tests de seguridad: cabeceras, secretos y arnés de intrusión |
 | `npm run reliability:live` | Lo mismo que `reliability`, contra **tu** Supabase real |
@@ -133,6 +133,11 @@ un artículo que no responde a la duda). Es una limitación de fondo de la búsq
 interfaz **siempre enseña la fuente** y el agente debe comprobar que el artículo corresponde a la duda.
 La solución de fondo es semántica (embeddings o un LLM como verificador, ver
 [`docs/PROMPT-INJECTION.md`](docs/PROMPT-INJECTION.md)).
+
+**Qué hace la interfaz para mitigarlo.** Cada respuesta empieza con *«Respuesta del artículo X. Antes de seguir los
+pasos, comprueba que corresponde a la duda del cliente»*, y si la coincidencia es débil (puntuación < 0,4; en las
+pruebas esas respuestas aciertan menos de la mitad de las veces) añade un aviso reforzado. **Nunca muestra un
+mensaje de «alta confianza»**: la banda alta también falla (≈ 18 %). El botón «¿Te sirvió?» recoge datos reales.
 
 ## Seguridad
 

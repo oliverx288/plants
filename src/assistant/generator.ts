@@ -1,4 +1,5 @@
 import type { Article } from '../lib/articles'
+import { isWeakMatch } from './relevance'
 import type { Answer, AnswerGenerator, AnswerSection, RetrievedChunk } from './types'
 
 const toSection = (c: RetrievedChunk): AnswerSection => ({
@@ -42,6 +43,7 @@ export class ExtractiveAnswerGenerator implements AnswerGenerator {
       kind: 'answer',
       source: { articleId: top.articleId, articleTitle: top.articleTitle, category: top.category },
       sections,
+      weakMatch: isWeakMatch(top),
     }
   }
 }

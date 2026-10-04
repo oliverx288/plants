@@ -21,6 +21,23 @@ import type { RetrievedChunk } from './types'
 export const MIN_SCORE = 0.2
 export const MIN_MATCHED_WEIGHT = 3.5
 
+/**
+ * Por debajo de esta puntuación, la respuesta se marca como "coincidencia débil" y la interfaz avisa con más
+ * énfasis de que se compruebe que el artículo corresponde a la duda.
+ *
+ * Medido en las pruebas de fiabilidad (VALIDACION.md §2.7; en muestra, informativo): de las respuestas que el
+ * asistente da, las de puntuación 0,20–0,39 son correctas el 46 % de las veces (12 de 26; solo 30–45 % en los
+ * conjuntos difíciles) y las de ≥ 0,40 el 82 % (23 de 28).
+ *
+ * IMPORTANTE: esto solo sirve para ADVERTIR más en la banda baja. NUNCA debe usarse para mostrar "alta
+ * confianza": la banda alta también falla (5 de 28, incluida una respuesta equivocada con puntuación 0,60).
+ */
+export const WEAK_MATCH_SCORE = 0.4
+
+export function isWeakMatch(chunk: RetrievedChunk): boolean {
+  return chunk.score < WEAK_MATCH_SCORE
+}
+
 export interface Gate {
   minScore: number
   minMatchedWeight: number

@@ -4,7 +4,7 @@ import { ask } from './ask'
 import type { AssistantDeps } from './ask'
 import { ExtractiveAnswerGenerator } from './generator'
 import { normalizeQuestion } from './question'
-import { MIN_MATCHED_WEIGHT, MIN_SCORE, isRelevant, selectRelevant } from './relevance'
+import { MIN_MATCHED_WEIGHT, MIN_SCORE, WEAK_MATCH_SCORE, isRelevant, isWeakMatch, selectRelevant } from './relevance'
 import { parseChunk } from './chunk'
 import type { AnswerGenerator, RetrievedChunk } from './types'
 
@@ -43,6 +43,26 @@ describe('umbral de relevancia', () => {
       chunk({ articleId: 'alto', score: 0.9 }),
     ])
     expect(picked.map((c) => c.articleId)).toEqual(['alto', 'medio'])
+  })
+})
+
+describe('coincidencia débil (solo para advertir más, nunca para tranquilizar)', () => {
+  it('es débil por debajo de WEAK_MATCH_SCORE y normal en el límite o por encima', () => {
+    expect(isWeakMatch(chunk({ score: WEAK_MATCH_SCORE - 0.01 }))).toBe(true)
+    expect(isWeakMatch(chunk({ score: WEAK_MATCH_SCORE }))).toBe(false)
+    expect(isWeakMatch(chunk({ score: 1 }))).toBe(false)
+  })
+
+  it('el umbral de respuesta es menor que el de coincidencia débil: hay una banda en la que se responde con aviso', () => {
+    expect(MIN_SCORE).toBeLessThan(WEAK_MATCH_SCORE)
+  })
+
+  it('el generador la marca en la respuesta según la puntuación del fragmento', async () => {
+    const generator = new ExtractiveAnswerGenerator(vi.fn())
+    const weak = await generator.generate({ question: 'q', chunks: [chunk({ score: 0.3 })] })
+    const strong = await generator.generate({ question: 'q', chunks: [chunk({ score: 0.8 })] })
+    expect(weak.kind === 'answer' && weak.weakMatch).toBe(true)
+    expect(strong.kind === 'answer' && strong.weakMatch).toBe(false)
   })
 })
 
@@ -99,6 +119,7 @@ describe('ExtractiveAnswerGenerator', () => {
       kind: 'answer',
       source: { articleId: 'a1', articleTitle: 'La ubicación no se actualiza', category: 'GPS y ubicación' },
       sections: [{ position: 1, heading: 'Qué comprobar primero', body: '', steps: ['Activa el GPS', 'Revisa la suscripción'] }],
+      weakMatch: false,
     })
   })
 

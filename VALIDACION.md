@@ -9,7 +9,7 @@ cada cosa, porque no es lo mismo.
 | 🧪 **Local** | Comprobado con tests automáticos sobre un Postgres real en local (PGlite) o con un Supabase simulado. Fiable para la lógica y el SQL; no sustituye a una prueba real |
 | ⏳ **Pendiente** | Hay que ejecutarlo contra el Supabase real y pegar aquí el resultado (instrucciones incluidas) |
 
-Pruebas automáticas: **334 tests en 24 archivos**, todos en verde (`npm test`), más typecheck y lint limpios.
+Pruebas automáticas: **342 tests en 24 archivos**, todos en verde (`npm test`), más typecheck y lint limpios.
 Cada bloque de tests se validó además con **pruebas de mutación**: se rompió el código a propósito y se
 comprobó que algún test fallaba. Las mutaciones que sobrevivieron se anotan donde corresponde.
 
@@ -63,6 +63,7 @@ pasos para resolverla con el artículo citado, para resolver la llamada rápido 
 | Mismo comportamiento como Nuria | ✅ Real |
 | Fiabilidad con 41 preguntas (sección 2) | ✅ Real (idéntica a la local) |
 | La respuesta es texto literal del artículo; si nada supera el umbral no se llama al generador; órdenes dentro de artículos o preguntas son datos inertes | 🧪 Local |
+| Cada respuesta pide comprobar que el artículo corresponde a la duda; si la coincidencia es débil (puntuación < 0,4) hay un aviso reforzado; **nunca** un mensaje de «alta confianza» (5 mutaciones detectadas; axe con contraste, móvil y CSP verificados en navegador real) | 🧪 Local |
 
 **Limitaciones.** No entiende sinónimos ni erratas (sección 2.4) y, lo más importante, **inventa respuestas en ~41 % de las preguntas sin artículo cercanas al dominio** (§2.7). Solo devuelve un artículo (no sugiere
 «quizá te interese»). Sin LLM, por decisión de diseño de esta versión.
@@ -285,6 +286,21 @@ inventa» para preguntas sin artículo cercanas al dominio**. Mitigaciones exist
 agente ve de qué artículo sale), las respuestas son texto literal y existe la valoración «¿Te sirvió?» para medir
 el problema con uso real. La solución de fondo es **semántica** (embeddings o un LLM como verificador con las
 defensas de [`docs/PROMPT-INJECTION.md`](docs/PROMPT-INJECTION.md)).
+
+**Mitigación en la interfaz (decidida con la autora).** No se toca la búsqueda. Cada respuesta se encabeza con
+el artículo del que sale y la petición de comprobar que corresponde a la duda del cliente. Además, la puntuación sí
+distingue las respuestas más dudosas (medido sobre las 54 respuestas que el asistente dio a las 100 preguntas de los
+cuatro conjuntos; **en muestra, informativo**):
+
+| Puntuación de la respuesta | Respondidas | Correctas | Fiabilidad |
+|---|---|---|---|
+| 0,20 – 0,39 («coincidencia débil») | 26 | 12 | **46 %** (30 % y 45 % en los dos conjuntos difíciles) |
+| ≥ 0,40 | 28 | 23 | 82 % (75 % y 63 % en los difíciles) |
+
+Por eso la banda débil lleva un aviso reforzado. **Pero la banda alta también falla** (5 de 28, incluida una respuesta
+equivocada con puntuación 0,60: «¿Cómo hablo con una persona?»), así que **nunca se muestra un mensaje de «alta
+confianza»** y hay un test que lo impide. El aviso reduce el riesgo; **no lo elimina**: depende de que el agente lea y
+compruebe.
 
 **Limitaciones de esta medición.** Las preguntas las escribió quien hizo el sistema (y sabía qué buscaba); 29
 preguntas sin artículo dan un intervalo muy ancho (la tasa real de inventadas podría estar entre ~25 % y ~59 %);
