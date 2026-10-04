@@ -19,7 +19,7 @@
 export interface TestQuestion {
   question: string
   expected: string | null
-  set: 'dev' | 'test' | 'fresh' | 'fresh2'
+  set: 'dev' | 'test' | 'fresh' | 'fresh2' | 'fresh3'
   /** Por qué es interesante / qué dificultad tiene. */
   note?: string
 }
@@ -156,4 +156,48 @@ export const FRESH2_QUESTIONS: TestQuestion[] = [
   { set: 'fresh2', expected: null, question: '¿Cuál es la contraseña del wifi del reloj?', note: 'adversaria: "contraseña"' },
   { set: 'fresh2', expected: null, question: '¿El SOS llama a la policía directamente?', note: 'cercana: dominio SOS; el contenido no lo dice' },
   { set: 'fresh2', expected: null, question: '¿Cuánto cuesta añadir un familiar más?', note: 'adversaria: "añadir familiar"' },
+]
+
+/*
+ * Tercer conjunto nuevo ("fresh3"): consultas CORTAS y COLOQUIALES, como las que escribe un agente con prisa
+ * ("el reloj no carga"). Se escribió tras un hallazgo real de la autora (esa consulta, que es literalmente el
+ * título de un artículo, devolvía "No tengo información") y ANTES de cambiar el umbral. Las preguntas sin
+ * artículo son consultas vagas o de una palabra, que el asistente NO debe contestar con un artículo cualquiera.
+ */
+export const FRESH3_QUESTIONS: TestQuestion[] = [
+  // ------------------------------------------------------------ CON respuesta (cortas)
+  { set: 'fresh3', expected: 'reloj-no-carga', question: 'el reloj no carga', note: 'hallazgo real: es el título exacto' },
+  { set: 'fresh3', expected: 'reloj-no-enciende', question: 'no enciende' },
+  { set: 'fresh3', expected: 'reloj-sin-cobertura', question: 'no tiene cobertura' },
+  { set: 'fresh3', expected: 'reloj-no-recibe-llamadas', question: 'no recibe llamadas' },
+  { set: 'fresh3', expected: 'reloj-se-apaga-solo', question: 'se apaga solo' },
+  { set: 'fresh3', expected: 'bateria-dura-poco', question: 'la batería dura poco' },
+  { set: 'fresh3', expected: 'sos-no-llama', question: 'el SOS no llama' },
+  { set: 'fresh3', expected: 'sos-falsa-alarma', question: 'falsa alarma del SOS' },
+  { set: 'fresh3', expected: 'sos-nadie-contesta', question: 'nadie contesta el SOS' },
+  { set: 'fresh3', expected: 'cancelar-cambiar-plan', question: 'cancelar suscripción' },
+  { set: 'fresh3', expected: 'anadir-familiar-cambiar-titular', question: 'cambiar de titular' },
+  { set: 'fresh3', expected: 'app-no-inicia-sesion', question: 'olvidé la contraseña' },
+  { set: 'fresh3', expected: 'suscripcion-caducada-pago-rechazado', question: 'pago rechazado' },
+  { set: 'fresh3', expected: 'ubicacion-no-se-actualiza', question: 'la ubicación no se actualiza' },
+  { set: 'fresh3', expected: 'ubicacion-equivocada', question: 'ubicación equivocada' },
+  { set: 'fresh3', expected: 'notificaciones-con-retraso', question: 'notificaciones con retraso' },
+  { set: 'fresh3', expected: 'actualizacion-a-medias', question: 'actualización a medias' },
+  { set: 'fresh3', expected: 'llamada-no-se-oye-bien', question: 'no se oye bien' },
+  { set: 'fresh3', expected: 'emparejar-reloj-app', question: 'no consigo emparejar' },
+  { set: 'fresh3', expected: 'zona-segura-sin-aviso', question: 'zona segura sin aviso' },
+
+  // ------------------------------------------------------------ SIN respuesta (vagas o de una palabra)
+  { set: 'fresh3', expected: null, question: 'reloj', note: 'una palabra genérica' },
+  { set: 'fresh3', expected: null, question: 'app', note: 'una palabra genérica' },
+  { set: 'fresh3', expected: null, question: 'SOS', note: 'demasiado vaga: hay 3 artículos' },
+  { set: 'fresh3', expected: null, question: 'el reloj', note: 'sin contenido' },
+  { set: 'fresh3', expected: null, question: 'no funciona', note: 'vaga' },
+  { set: 'fresh3', expected: null, question: 'ayuda', note: 'vaga' },
+  { set: 'fresh3', expected: null, question: 'hola', note: 'saludo' },
+  { set: 'fresh3', expected: null, question: 'precio' },
+  { set: 'fresh3', expected: null, question: 'garantía' },
+  { set: 'fresh3', expected: null, question: 'cambiar color', note: 'cercana: "cambiar"' },
+  { set: 'fresh3', expected: null, question: 'llamar a soporte', note: 'cercana: "llamar"' },
+  { set: 'fresh3', expected: null, question: 'pagar con tarjeta', note: 'adversaria: "pagar", "tarjeta"' },
 ]

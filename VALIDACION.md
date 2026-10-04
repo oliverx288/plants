@@ -9,7 +9,7 @@ cada cosa, porque no es lo mismo.
 | 🧪 **Local** | Comprobado con tests automáticos sobre un Postgres real en local (PGlite) o con un Supabase simulado. Fiable para la lógica y el SQL; no sustituye a una prueba real |
 | ⏳ **Pendiente** | Hay que ejecutarlo contra el Supabase real y pegar aquí el resultado (instrucciones incluidas) |
 
-Pruebas automáticas: **342 tests en 24 archivos**, todos en verde (`npm test`), más typecheck y lint limpios.
+Pruebas automáticas: **368 tests en 24 archivos**, todos en verde (`npm test`), más typecheck y lint limpios.
 Cada bloque de tests se validó además con **pruebas de mutación**: se rompió el código a propósito y se
 comprobó que algún test fallaba. Las mutaciones que sobrevivieron se anotan donde corresponde.
 
@@ -110,7 +110,8 @@ cambiar de opinión). Como Nuria, abre «Valoraciones».
 
 | Comprobación | Resultado |
 |---|---|
-| Aplicar la migración `…_answer_feedback.sql`, valorar como Lucía y verlo como Nuria | ⏳ Pendiente (hay que aplicar la migración en el Supabase real) |
+| Aplicar la migración `…_answer_feedback.sql` y valorar como Lucía: el botón aparece tras una respuesta y muestra «Gracias por tu valoración.» | ✅ Real |
+| Verlo como Nuria en «Valoraciones» | ⏳ Pendiente (no reportado todavía) |
 | La valoración se guarda y se actualiza si cambia de opinión (no se duplica); el título del artículo lo pone el servidor; si el artículo se borra, la valoración se conserva | 🧪 Local (14 tests sobre Postgres real) |
 | El agente solo ve y cambia las suyas; no puede valorar a nombre de otra persona, cambiar la pregunta o el artículo, ni borrar; solo el editor ve todas | 🧪 Local (RLS; 5 mutaciones detectadas) |
 | Si falla el guardado se dice y **no** se marca como hecha; nunca se muestra el error crudo; las agrupadas ignoran mayúsculas y no mezclan positivas con negativas | 🧪 Local |
@@ -306,6 +307,51 @@ compruebe.
 preguntas sin artículo dan un intervalo muy ancho (la tasa real de inventadas podría estar entre ~25 % y ~59 %);
 el Nuevo 1 ya se miró fallo a fallo, así que solo el Nuevo 2 es estrictamente fuera de muestra.
 
+### 2.8 Consultas cortas y coloquiales (hallazgo real de la autora)
+
+**El hallazgo.** Probando la aplicación, la autora vio que `el reloj no carga` devolvía «No tengo información» aunque
+**es literalmente el título de un artículo**, mientras que una frase larga sí funcionaba. Ningún conjunto de pruebas
+lo detectó: todas las preguntas eran frases largas.
+
+**Diagnóstico.** La consulta coincide al **100 %** con el título (puntuación 1,00) y el artículo correcto es el primero,
+pero el umbral exige una *evidencia absoluta* ≥ 3,5, que se calibró para rechazar palabras sueltas como «reloj». Una
+consulta corta tiene pocas palabras y suma poco peso (2,9) aunque coincida del todo. **Fue un fallo de diseño del
+umbral, no un problema de sinónimos.**
+
+**Método.** Se escribió un conjunto de **32 consultas cortas** (20 con artículo y 12 sin él: palabras sueltas, saludos,
+consultas vagas) y se midió **antes** de cambiar nada: 78,1 % de aciertos y 70 % de recall; 5 de las 6 que no encontraba
+tenían puntuación 1,00 con el artículo correcto primero.
+
+**Solución: «coincidencia completa»** (una segunda vía que se suma a la general, no la sustituye). Se acepta solo si se
+cumplen **todas** estas condiciones: (1) coinciden todos los términos significativos de la pregunta; (2) son **al menos
+2** (una palabra suelta sigue rechazada); (3) puntuación ≥ 0,9, es decir, coinciden en el título; (4) evidencia mínima
+2,0; (5) **sin empate**: el siguiente artículo queda ≥ 0,1 por debajo, y la regla solo se aplica al primer resultado.
+Requiere la migración `…_search_matched_terms.sql` (la función devuelve cuántos términos coinciden); sin ella, la vía
+nueva simplemente no se activa.
+
+| Conjunto | Aciertos antes → después | Inventadas antes → después |
+|---|---|---|
+| Original (41), Nuevo 1 (28), Nuevo 2 (31) | **idénticos** | **idénticas** (0, 6 y 6) |
+| **Cortas (32)** | 78,1 % → **87,5 %** (recall 70 % → 85 %) | 1 → 1 |
+
+La evidencia independiente de que **no daña** es la primera fila: en las 100 preguntas anteriores el resultado no cambió
+en ninguna. Un test lo vigila (la regla no puede añadir inventadas ni cambiar nada fuera de las cortas). Se recuperaron
+`el reloj no carga`, `no recibe llamadas` y `la ubicación no se actualiza`.
+
+**Un fallo cazado por los tests durante el desarrollo.** La primera versión de la regla comparaba cada resultado solo con
+el *siguiente*; en un empate, el segundo no tenía siguiente y se colaba como «sin rival», contestando con el artículo
+equivocado. Se corrigió aplicándola solo al primer resultado. Además, una mutación sobrevivió (el test del límite de
+evidencia se calculaba a partir de la propia constante) y se fijaron los límites con valores literales.
+
+**Lo que NO resuelve (a propósito).**
+- `no enciende` y `no tiene cobertura`: tras quitar palabras vacías solo queda **1** término, indistinguible de «reloj» a
+  secas sin reabrir las respuestas inventadas.
+- `el SOS no llama`: empata con «nadie contesta el SOS»; es preferible no responder a elegir uno al azar.
+- Sinónimos y erratas (§2.4).
+
+**Limitación de esta medición.** El conjunto de cortas se escribió **después** del hallazgo, así que demuestra que la regla
+arregla ese patrón, no que generalice a otros; la prueba de que no daña es la de las 100 preguntas anteriores.
+
 ---
 
 ## 3. Pruebas de seguridad
@@ -342,7 +388,7 @@ reales** y comprueban con roles reales de Postgres (`anon`, `authenticated`) y R
 - *Hallazgo durante el desarrollo:* con una service role puesta por error como clave pública, la app se negaba a
   arrancar pero el bundle ya contenía la clave. Se añadió la comprobación en tiempo de **build**.
 
-### 3.3 Intrusión contra la API de Supabase ⏳ Pendiente de ejecutar
+### 3.3 Intrusión contra la API de Supabase ✅ Real
 **Ejecutar:** `npm run security:live` (necesita en `.env` la clave pública y las contraseñas de Lucía y Nuria;
 **no** usa la service role).
 
@@ -365,12 +411,10 @@ una protección (borrar, editar, ascender, leer preguntas, `save_article`, `fetc
 arnés marca FALLO exactamente en el intento correspondiente, y detecta incluso una API que «miente» diciendo
 «0 filas» cuando sí cambió algo.
 
-**Resultado en el Supabase real:** *(pegar aquí la salida de `npm run security:live`)*. Mientras tanto, **D4 y D5 de §3.4 ya son
-peticiones directas a `/rest/v1` con el token del agente contra el servidor real** y fallaron como debían.
-
-```text
-⏳ pendiente de ejecutar
-```
+**Resultado en el Supabase real: ✅** `npm run security:live` fue ejecutado por la autora contra su proyecto y terminó con
+«✓ Todas las protecciones funcionan», **24 de 24 intentos de intrusión bloqueados**. *(Lo comunicó la autora; no se pegó
+aquí la salida completa, así que no se incluye el detalle de cada intento.)* Además, D4 y D5 de §3.4 ya eran peticiones
+directas a `/rest/v1` con el token del agente y también fallaron como debían.
 
 ### 3.4 Desde la interfaz y las DevTools ✅ Real (hecho como Lucía, agente)
 Ejecutado por la autora contra su Supabase real. Todos los intentos fallaron como debían. *Única salvedad:* de D5 solo se

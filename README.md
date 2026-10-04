@@ -61,6 +61,7 @@ npm install
    3. `20261004000003_search.sql` (búsqueda y registro de preguntas sin respuesta)
    4. `20261004000004_save_article.sql` (guardado atómico de artículos)
    5. `20261004000005_answer_feedback.sql` (valoración «¿Te sirvió?» de las respuestas)
+   6. `20261004000006_search_matched_terms.sql` (la búsqueda devuelve cuántos términos coinciden; permite aceptar consultas cortas y precisas como «el reloj no carga»)
 3. **Project Settings → API Keys:** copia la clave **pública** (anon / publishable) y la **service role** (secreta).
 
 ### 3. Variables de entorno
@@ -95,7 +96,7 @@ hayas elegido y **no uses nunca contraseñas reales**.
 
 | Comando | Qué hace |
 |---|---|
-| `npm test` | Todas las pruebas (342, incluida una auditoría de accesibilidad con axe-core), sin necesidad de credenciales |
+| `npm test` | Todas las pruebas (368, incluida una auditoría de accesibilidad con axe-core), sin necesidad de credenciales |
 | `npm run reliability` | Mide la fiabilidad del asistente con 41 preguntas y muestra el porcentaje de aciertos |
 | `npm run security` | Tests de seguridad: cabeceras, secretos y arnés de intrusión |
 | `npm run reliability:live` | Lo mismo que `reliability`, contra **tu** Supabase real |
@@ -126,6 +127,7 @@ recuperación ni el umbral. La guía para hacerlo con seguridad está en
 |---|---|---|
 | **Fáciles** (41 preguntas; las que no tienen artículo hablan de cosas ajenas al vocabulario del dominio: agua, garantía, precio) | **85 %** | 0 de 16 |
 | **Difíciles** (59 preguntas nuevas, con preguntas *adversarias*: vocabulario del dominio para algo que no está cubierto, como «¿Aceptan pagos con PayPal?») | **56 %** | **12 de 29 (41 %)** |
+| **Cortas y coloquiales** (32 consultas como «el reloj no carga») | **87,5 %** | 1 de 12 |
 
 Es decir: **cuando la pregunta no tiene artículo pero se parece al dominio, el asistente inventa una respuesta
 en torno al 40 % de las veces** (la «respuesta» es siempre texto literal de un artículo, con su fuente, pero de
@@ -201,8 +203,9 @@ docs/          guía de prompt injection y capturas
 
 ## Limitaciones conocidas
 
-- **Búsqueda léxica:** no entiende sinónimos («señal» ≠ «cobertura») ni erratas. Es la causa de todas las
-  preguntas con artículo que no encuentra en las pruebas.
+- **Búsqueda léxica:** no entiende sinónimos («señal» ≠ «cobertura») ni erratas. Es la causa de casi todas las
+  preguntas con artículo que no encuentra en las pruebas. Las consultas de **una sola palabra significativa**
+  («no enciende») y las que **empatan entre dos artículos** («el SOS no llama») tampoco se responden, a propósito.
 - **Inventa respuestas en preguntas cercanas al dominio que no tienen artículo** (≈ 40 % en las pruebas
   difíciles). El umbral actual es un compromiso: endurecerlo reduce las inventadas pero también responde mucho
   menos bien a las preguntas que sí tienen artículo.

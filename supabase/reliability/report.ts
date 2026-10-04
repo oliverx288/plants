@@ -1,3 +1,4 @@
+import { DEFAULT_GATE } from '../../src/assistant/relevance'
 import { grade, summarize, wilsonInterval } from './evaluate'
 import type { Metrics, QuestionResult, RawResult } from './evaluate'
 
@@ -45,7 +46,7 @@ export function formatFailures(results: QuestionResult[]): string {
 export function formatSweep(raw: RawResult[], minScore: number, weights: number[], current: number): string {
   const lines = ['  evidencia mínima | aciertos | inventadas | otro artículo | no encontradas']
   for (const w of weights) {
-    const m = summarize(raw.map((r) => grade(r, { minScore, minMatchedWeight: w })))
+    const m = summarize(raw.map((r) => grade(r, { ...DEFAULT_GATE, minScore, minMatchedWeight: w })))
     const mark = w === current ? '  ← actual' : ''
     lines.push(
       `  ${w.toFixed(1).padStart(16)} | ${f(m.accuracy).padStart(8)} | ${String(m.falsePositives).padStart(10)} | ${String(m.wrongAnswers).padStart(13)} | ${String(m.missed).padStart(15)}${mark}`,

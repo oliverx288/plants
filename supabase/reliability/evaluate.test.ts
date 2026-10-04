@@ -13,7 +13,7 @@ const ID_GPS = articleId('ubicacion-no-se-actualiza')
 const ID_SOS = articleId('sos-no-llama')
 const chunk = (articleIdValue: string, score = 0.8, matchedWeight = 6): RetrievedChunk => ({
   articleId: articleIdValue, articleTitle: 't', category: 'c', sectionId: 's', sectionPosition: 0,
-  heading: 'h', body: '', steps: ['p'], score, matchedWeight,
+  heading: 'h', body: '', steps: ['p'], score, matchedWeight, matchedTerms: 3, queryTerms: 4,
 })
 const q = (expected: string | null): TestQuestion => ({ question: 'x', expected, set: 'dev' })
 
@@ -40,8 +40,22 @@ describe('grade', () => {
   })
   it('respeta un umbral distinto', () => {
     const raw = { question: q(null), chunks: [chunk(ID_GPS, 0.5, 3)] }
-    expect(grade(raw, { minScore: 0.2, minMatchedWeight: 3.5 }).status).toBe('ok')
-    expect(grade(raw, { minScore: 0.2, minMatchedWeight: 2.5 }).status).toBe('false-positive')
+    expect(grade(raw, { minScore: 0.2, minMatchedWeight: 3.5, completeMatch: false }).status).toBe('ok')
+    expect(grade(raw, { minScore: 0.2, minMatchedWeight: 2.5, completeMatch: false }).status).toBe('false-positive')
+  })
+})
+
+describe('grade con coincidencia completa', () => {
+  it('una consulta corta que coincide al 100 % con el artículo esperado se responde (antes: "No tengo información")', () => {
+    const shortHit = { ...chunk(ID_GPS, 1, 2.9), matchedTerms: 2, queryTerms: 2 }
+    expect(grade({ question: q('ubicacion-no-se-actualiza'), chunks: [shortHit] }).status).toBe('ok')
+    expect(grade({ question: q('ubicacion-no-se-actualiza'), chunks: [shortHit] }, { ...{ minScore: 0.2, minMatchedWeight: 3.5 }, completeMatch: false }).status).toBe('missed')
+  })
+  it('un empate entre dos artículos no se responde, ni acertando ni fallando', () => {
+    const a = { ...chunk(ID_GPS, 1, 2.9), matchedTerms: 2, queryTerms: 2 }
+    const b = { ...chunk(ID_SOS, 1, 2.9), matchedTerms: 2, queryTerms: 2 }
+    expect(grade({ question: q('ubicacion-no-se-actualiza'), chunks: [a, b] }).status).toBe('missed')
+    expect(grade({ question: q(null), chunks: [a, b] }).status).toBe('ok')
   })
 })
 
