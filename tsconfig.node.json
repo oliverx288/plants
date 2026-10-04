@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["vite.config.ts", "src/lib/publicKey.ts", "supabase/tests", "supabase/seed", "scripts"]
+  "include": ["vite.config.ts", "src/lib/publicKey.ts", "supabase/tests", "supabase/seed", "supabase/reliability", "scripts", "security"]
 }
