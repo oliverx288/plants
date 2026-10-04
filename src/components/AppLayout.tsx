@@ -30,9 +30,14 @@ export function AppLayout() {
               Artículos
             </NavLink>
             {isEditor && (
-              <NavLink to="/preguntas" className={linkClass}>
-                Preguntas sin respuesta
-              </NavLink>
+              <>
+                <NavLink to="/preguntas" className={linkClass}>
+                  Preguntas sin respuesta
+                </NavLink>
+                <NavLink to="/valoraciones" className={linkClass}>
+                  Valoraciones
+                </NavLink>
+              </>
             )}
           </nav>
           <div className={styles.user}>

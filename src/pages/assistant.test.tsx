@@ -9,6 +9,7 @@ const fake = vi.hoisted(() => {
   const state = {
     search: null as null | ((params: { query_text: string; max_results: number }) => Promise<{ data: unknown; error: unknown }>),
     log: null as null | ((params: { question_text: string }) => Promise<{ data: unknown; error: unknown }>),
+    feedback: null as null | ((params: { p_question: string; p_article_id: string; p_helpful: boolean }) => Promise<{ data: unknown; error: unknown }>),
     article: null as Record<string, unknown> | null,
   }
   const session = { user: { id: 'u-lucia', email: 'lucia@velia-demo.test' } }
@@ -35,6 +36,7 @@ const fake = vi.hoisted(() => {
     rpc: vi.fn((name: string, params: never) => {
       if (name === 'search_knowledge') return state.search!(params)
       if (name === 'log_unanswered_question') return state.log!(params)
+      if (name === 'submit_answer_feedback') return state.feedback!(params)
       throw new Error(`rpc inesperada: ${name}`)
     }),
   }
@@ -83,6 +85,7 @@ async function ask(text: string) {
 beforeEach(() => {
   fake.state.search = () => ok([row()])
   fake.state.log = () => ok(null)
+  fake.state.feedback = () => ok(null)
   fake.state.article = null
   vi.clearAllMocks()
 })
@@ -255,5 +258,86 @@ describe('accesibilidad (axe-core)', () => {
     await user.click(screen.getByRole('button', { name: 'Preguntar' }))
     await screen.findByText('No tengo información sobre esto')
     expect(await a11yViolations()).toEqual([])
+  })
+})
+
+describe('asistente: valoración de la respuesta', () => {
+  const ARTICLE = '10000000-0000-4000-8000-000000000001'
+
+  it('tras una respuesta se puede valorar; se envía la pregunta limpia y el artículo, y se agradece', async () => {
+    open()
+    const user = await ask('  la ubicación   no se actualiza ')
+    await screen.findByRole('heading', { name: 'Respuesta' })
+
+    await user.click(screen.getByRole('button', { name: 'Sí, me sirvió' }))
+
+    expect(await screen.findByText('Gracias por tu valoración.')).toBeTruthy()
+    expect(fake.client.rpc).toHaveBeenCalledWith('submit_answer_feedback', {
+      p_question: 'la ubicación no se actualiza',
+      p_article_id: ARTICLE,
+      p_helpful: true,
+    })
+    expect(screen.getByRole('button', { name: 'Sí, me sirvió' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: 'No me sirvió' }).getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('se puede cambiar de opinión: se vuelve a enviar con el nuevo sentido', async () => {
+    open()
+    const user = await ask('la ubicación no se actualiza')
+    await screen.findByRole('heading', { name: 'Respuesta' })
+    await user.click(screen.getByRole('button', { name: 'Sí, me sirvió' }))
+    await screen.findByText('Gracias por tu valoración.')
+    await user.click(screen.getByRole('button', { name: 'No me sirvió' }))
+
+    await waitFor(() =>
+      expect(fake.client.rpc).toHaveBeenLastCalledWith('submit_answer_feedback', expect.objectContaining({ p_helpful: false })),
+    )
+    expect(screen.getByRole('button', { name: 'No me sirvió' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: 'Sí, me sirvió' }).getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('si no se pudo guardar, lo dice y NO marca la valoración como hecha', async () => {
+    fake.state.feedback = () => Promise.resolve({ data: null, error: { code: 'XX000', message: 'detalle interno secreto' } })
+    open()
+    const user = await ask('la ubicación no se actualiza')
+    await screen.findByRole('heading', { name: 'Respuesta' })
+    await user.click(screen.getByRole('button', { name: 'Sí, me sirvió' }))
+
+    expect(await screen.findByText('No se pudo guardar tu valoración. Inténtalo de nuevo.')).toBeTruthy()
+    expect(screen.queryByText(/detalle interno secreto/)).toBeNull() // nunca se muestra el error crudo
+    expect(screen.queryByText('Gracias por tu valoración.')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Sí, me sirvió' }).getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('un artículo borrado entre tanto da un mensaje claro', async () => {
+    fake.state.feedback = () => Promise.resolve({ data: null, error: { code: 'P0002', message: 'x' } })
+    open()
+    const user = await ask('la ubicación no se actualiza')
+    await screen.findByRole('heading', { name: 'Respuesta' })
+    await user.click(screen.getByRole('button', { name: 'No me sirvió' }))
+    expect(await screen.findByText('El artículo ya no existe, así que no se puede valorar.')).toBeTruthy()
+  })
+
+  it('no hay valoración cuando la respuesta es "No tengo información"', async () => {
+    fake.state.search = () => ok([])
+    open()
+    await ask('¿Es resistente al agua?')
+    await screen.findByText('No tengo información sobre esto')
+    expect(screen.queryByText('¿Te sirvió esta respuesta?')).toBeNull()
+  })
+
+  it('una respuesta nueva empieza sin valorar', async () => {
+    open()
+    const user = await ask('la ubicación no se actualiza')
+    await screen.findByRole('heading', { name: 'Respuesta' })
+    await user.click(screen.getByRole('button', { name: 'Sí, me sirvió' }))
+    await screen.findByText('Gracias por tu valoración.')
+
+    const box = screen.getByLabelText('Duda del cliente')
+    await user.clear(box)
+    await user.type(box, 'otra pregunta distinta')
+    await user.click(screen.getByRole('button', { name: 'Preguntar' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Sí, me sirvió' }).getAttribute('aria-pressed')).toBe('false'))
+    expect(screen.queryByText('Gracias por tu valoración.')).toBeNull()
   })
 })

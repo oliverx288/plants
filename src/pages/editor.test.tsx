@@ -11,6 +11,7 @@ const fake = vi.hoisted(() => {
     role: 'editor' as 'editor' | 'agent',
     articles: [] as Row[],
     unanswered: [] as Row[],
+    feedback: [] as Row[],
     profiles: [] as Row[],
     saveError: null as null | { code: string },
     saveCalls: [] as unknown[],
@@ -27,7 +28,13 @@ const fake = vi.hoisted(() => {
     let single = false
 
     const rows = (): Row[] =>
-      table === 'articles' ? state.articles : table === 'unanswered_questions' ? state.unanswered : state.profiles
+      table === 'articles'
+        ? state.articles
+        : table === 'unanswered_questions'
+          ? state.unanswered
+          : table === 'answer_feedback'
+            ? state.feedback
+            : state.profiles
 
     const run = () => {
       const result = rows().filter((r) => filters.every((f) => f(r)))
@@ -106,6 +113,10 @@ const article = (id: string, title: string, category: string) => ({
     { id: `${id}-1`, position: 1, heading: 'Pasos', body: '', steps: ['Primer paso', 'Segundo paso'] },
   ],
 })
+const ID_BAT = '10000000-0000-4000-8000-000000000002'
+const fb = (id: string, text: string, userId: string, helpful: boolean, updatedAt: string, articleId: string | null = ID_A, title = 'La ubicación no se actualiza') => ({
+  id, question: text, user_id: userId, helpful, updated_at: updatedAt, article_id: articleId, article_title: title,
+})
 const question = (id: string, text: string, userId: string, resolved = false, createdAt = '2026-09-20T10:00:00Z') => ({
   id, question: text, user_id: userId, resolved, created_at: createdAt,
 })
@@ -135,6 +146,12 @@ beforeEach(() => {
     question('q2', '¿es  RESISTENTE al agua?', 'u-pedro', false, '2026-09-22T09:00:00Z'),
     question('q3', '¿Cuánto dura la garantía?', 'u-lucia'),
     question('q4', '¿Cómo cambio la pulsera?', 'u-lucia', true),
+  ]
+  fake.state.feedback = [
+    fb('f1', '¿La ubicación no se actualiza?', 'u-lucia', false, '2026-09-21T10:00:00Z'),
+    fb('f2', '¿la  ubicación no se actualiza?', 'u-pedro', false, '2026-09-23T10:00:00Z'),
+    fb('f3', 'la batería dura poco', 'u-lucia', true, '2026-09-22T10:00:00Z', ID_BAT, 'La batería dura poco'),
+    fb('f4', 'cómo cancelo', 'u-pedro', false, '2026-09-24T10:00:00Z', null, 'Artículo que se borró'),
   ]
   vi.clearAllMocks()
 })
@@ -410,6 +427,7 @@ describe('el agente NO ve ni puede abrir las pantallas del editor (la seguridad 
     open('/articulos')
     expect(await screen.findByRole('link', { name: 'Nuevo artículo' })).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Preguntas sin respuesta' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Valoraciones' })).toBeTruthy()
   })
 })
 
@@ -434,6 +452,68 @@ describe('accesibilidad (axe-core)', () => {
   it('preguntas sin respuesta', async () => {
     open('/preguntas')
     await screen.findByRole('button', { name: /Pendientes/ })
+    expect(await a11yViolations()).toEqual([])
+  })
+})
+
+describe('valoraciones de las respuestas (editor)', () => {
+  it('muestra el resumen y las "no me sirvió" agrupadas, con acceso directo al artículo', async () => {
+    open('/valoraciones')
+    expect(await screen.findByText('25 % de respuestas útiles')).toBeTruthy()
+    expect(screen.getByText(/4 valoraciones: 1 positivas y 3 negativas/)).toBeTruthy()
+    expect(screen.getByText('Con pocas valoraciones el porcentaje es orientativo.')).toBeTruthy()
+
+    const items = screen.getAllByRole('listitem')
+    expect(items).toHaveLength(2) // las dos de la ubicación se agrupan; la del artículo borrado va aparte
+    expect(within(items[0]).getByText('2 valoraciones')).toBeTruthy()
+    expect(within(items[0]).getByText(/Lucía, Pedro/)).toBeTruthy()
+    expect(within(items[0]).getByRole('link', { name: 'La ubicación no se actualiza' }).getAttribute('href')).toBe(`/articulos/${ID_A}`)
+    expect(within(items[0]).getByRole('link', { name: 'Revisar este artículo' }).getAttribute('href')).toBe(`/articulos/${ID_A}/editar`)
+  })
+
+  it('un artículo que se borró se indica y no ofrece enlaces rotos', async () => {
+    open('/valoraciones')
+    const item = (await screen.findAllByRole('listitem'))[1]
+    expect(within(item).getByText(/Artículo que se borró \(artículo borrado\)/)).toBeTruthy()
+    expect(within(item).queryByRole('link')).toBeNull()
+  })
+
+  it('permite ver las positivas', async () => {
+    open('/valoraciones')
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Me sirvió (1)' }))
+    expect(screen.getByText('la batería dura poco')).toBeTruthy()
+    expect(screen.queryByRole('link', { name: 'Revisar este artículo' })).toBeNull()
+  })
+
+  it('mensajes cuando no hay valoraciones o ninguna negativa', async () => {
+    fake.state.feedback = []
+    open('/valoraciones')
+    expect(await screen.findByText(/Todavía no hay valoraciones/)).toBeTruthy()
+    cleanup()
+    fake.state.feedback = [fb('f9', 'una pregunta', 'u-lucia', true, '2026-09-20T10:00:00Z')]
+    open('/valoraciones')
+    expect(await screen.findByText('No hay valoraciones negativas. ¡Buen trabajo!')).toBeTruthy()
+  })
+
+  it('el texto de la pregunta se muestra como texto aunque contenga HTML', async () => {
+    fake.state.feedback = [fb('f9', '<img src=x onerror="window.__pwned=true">', 'u-lucia', false, '2026-09-20T10:00:00Z')]
+    open('/valoraciones')
+    expect(await screen.findByText('<img src=x onerror="window.__pwned=true">')).toBeTruthy()
+    expect(document.querySelector('main img')).toBeNull()
+  })
+
+  it('el agente no ve el enlace ni puede abrir la pantalla', async () => {
+    fake.state.role = 'agent'
+    open('/valoraciones')
+    expect(await screen.findByText('No tienes permiso para ver esta página')).toBeTruthy()
+    expect(screen.queryByText(/respuestas útiles/)).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Valoraciones' })).toBeNull()
+  })
+
+  it('accesibilidad (axe-core)', async () => {
+    open('/valoraciones')
+    await screen.findByText('25 % de respuestas útiles')
     expect(await a11yViolations()).toEqual([])
   })
 })

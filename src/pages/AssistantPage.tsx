@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { ask } from '../assistant/ask'
 import type { AskResult } from '../assistant/ask'
 import { MAX_QUESTION_LENGTH, normalizeQuestion } from '../assistant/question'
+import { AnswerFeedback } from '../components/AnswerFeedback'
 import { Alert, Button, Card, Spinner, TextareaField } from '../components/ui'
 import styles from './AssistantPage.module.css'
 
@@ -13,7 +14,7 @@ type View =
   | { status: 'done'; question: string; result: AskResult }
   | { status: 'error'; question: string }
 
-function AnswerCard({ result }: { result: Extract<AskResult, { status: 'answer' }> }) {
+function AnswerCard({ result, question }: { result: Extract<AskResult, { status: 'answer' }>; question: string }) {
   const { source, sections } = result.answer
   return (
     <Card as="article" aria-labelledby="respuesta-titulo">
@@ -41,6 +42,9 @@ function AnswerCard({ result }: { result: Extract<AskResult, { status: 'answer' 
         <Link to={`/articulos/${source.articleId}#seccion-${sections[0].position}`}>{source.articleTitle}</Link>
         <span className={styles.category}> · {source.category}</span>
       </p>
+
+      {/* La tarjeta se desmonta mientras se busca, así que cada respuesta nueva empieza sin valorar. */}
+      <AnswerFeedback question={question} articleId={source.articleId} />
     </Card>
   )
 }
@@ -124,7 +128,7 @@ export function AssistantPage() {
               Duda: <q>{view.question}</q>
             </p>
             {view.result.status === 'answer' ? (
-              <AnswerCard result={view.result} />
+              <AnswerCard result={view.result} question={view.question} />
             ) : (
               <Alert tone="warning" title="No tengo información sobre esto">
                 <p>Ningún artículo de la base de conocimiento cubre esta duda.</p>

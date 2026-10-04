@@ -9,7 +9,7 @@ cada cosa, porque no es lo mismo.
 | 🧪 **Local** | Comprobado con tests automáticos sobre un Postgres real en local (PGlite) o con un Supabase simulado. Fiable para la lógica y el SQL; no sustituye a una prueba real |
 | ⏳ **Pendiente** | Hay que ejecutarlo contra el Supabase real y pegar aquí el resultado (instrucciones incluidas) |
 
-Pruebas automáticas: **298 tests en 22 archivos**, todos en verde (`npm test`), más typecheck y lint limpios.
+Pruebas automáticas: **331 tests en 24 archivos**, todos en verde (`npm test`), más typecheck y lint limpios.
 Cada bloque de tests se validó además con **pruebas de mutación**: se rompió el código a propósito y se
 comprobó que algún test fallaba. Las mutaciones que sobrevivieron se anotan donde corresponde.
 
@@ -100,7 +100,26 @@ bórralo.
 **Limitaciones.** Sin control de concurrencia (gana el último en guardar). Sin historial de cambios. Las
 secciones se reemplazan enteras en cada guardado (sus ids internos cambian; los enlaces usan la posición).
 
-### 1.6 Sistema de diseño y accesibilidad
+### 1.6 Valoración de las respuestas («¿Te sirvió?»)
+**User story.** *Como responsable de la documentación, quiero saber qué respuestas no sirvieron a quien las usó, para
+medir la fiabilidad con uso real y no solo con preguntas escritas por quien hizo el sistema.*
+
+**Cómo probarla.** Como Lucía, pregunta algo con respuesta y pulsa «Sí, me sirvió» o «No me sirvió» (puedes
+cambiar de opinión). Como Nuria, abre «Valoraciones».
+
+| Comprobación | Resultado |
+|---|---|
+| Aplicar la migración `…_answer_feedback.sql`, valorar como Lucía y verlo como Nuria | ⏳ Pendiente (hay que aplicar la migración en el Supabase real) |
+| La valoración se guarda y se actualiza si cambia de opinión (no se duplica); el título del artículo lo pone el servidor; si el artículo se borra, la valoración se conserva | 🧪 Local (14 tests sobre Postgres real) |
+| El agente solo ve y cambia las suyas; no puede valorar a nombre de otra persona, cambiar la pregunta o el artículo, ni borrar; solo el editor ve todas | 🧪 Local (RLS; 5 mutaciones detectadas) |
+| Si falla el guardado se dice y **no** se marca como hecha; nunca se muestra el error crudo; las agrupadas ignoran mayúsculas y no mezclan positivas con negativas | 🧪 Local |
+| Accesibilidad con axe en navegador real (incluido contraste) y sin desbordamiento a 390 px | 🧪 Local |
+
+**Limitaciones.** El porcentaje de «respuestas útiles» con pocas valoraciones es orientativo (la pantalla lo avisa por
+debajo de 30). No hay comentario libre: solo sí/no. Las preguntas guardadas pueden contener datos personales si el
+agente los escribe (la interfaz lo desaconseja).
+
+### 1.7 Sistema de diseño y accesibilidad
 Tokens de color, tipografía y espaciado; componentes reutilizables. Contrastes medidos con un script:
 texto 7,2–15,5:1, botón primario 5,8:1, borde de controles 4,2:1 (todos ≥ WCAG AA). Foco visible, enlace «saltar
 al contenido», estado activo no solo por color, objetivos táctiles de 44 px, sin desbordamiento horizontal a
@@ -221,7 +240,7 @@ quitar la ponderación por campo o por rareza hace fallar el test.
 Principio: *el frontend solo muestra u oculta; la seguridad la aplica el servidor.*
 
 ### 3.1 Pruebas automáticas sobre Postgres real 🧪
-`supabase/tests/rls.test.ts` (33), `search.test.ts` (26) y `save_article.test.ts` (24) ejecutan **las migraciones
+`supabase/tests/rls.test.ts` (33), `search.test.ts` (26), `save_article.test.ts` (24) y `feedback.test.ts` (14) ejecutan **las migraciones
 reales** y comprueban con roles reales de Postgres (`anon`, `authenticated`) y RLS activa:
 
 - RLS activada en **todas** las tablas (un test falla si se añade una tabla sin ella).

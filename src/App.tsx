@@ -7,6 +7,7 @@ import { ArticlePage } from './pages/ArticlePage'
 import { EditArticlePage, NewArticlePage } from './pages/ArticleEditorPages'
 import { ArticlesPage } from './pages/ArticlesPage'
 import { AssistantPage } from './pages/AssistantPage'
+import { FeedbackPage } from './pages/FeedbackPage'
 import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { UnansweredPage } from './pages/UnansweredPage'
@@ -27,6 +28,7 @@ export function AppRoutes() {
             <Route path="articulos/nuevo" element={<NewArticlePage />} />
             <Route path="articulos/:id/editar" element={<EditArticlePage />} />
             <Route path="preguntas" element={<UnansweredPage />} />
+            <Route path="valoraciones" element={<FeedbackPage />} />
           </Route>
         </Route>
       </Route>

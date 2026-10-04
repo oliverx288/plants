@@ -19,7 +19,7 @@ artículo falta.
 | Rol | Usuaria de prueba | Puede |
 |---|---|---|
 | **Agente** | Lucía | Usar el asistente y leer artículos. **No** puede crear, editar ni borrar. |
-| **Editor** | Nuria | Todo lo del agente, más crear/editar/borrar artículos y ver las **preguntas sin respuesta**. |
+| **Editor** | Nuria | Todo lo del agente, más crear/editar/borrar artículos, ver las **preguntas sin respuesta** y las **valoraciones** de las respuestas. |
 
 Los tres principios del proyecto:
 
@@ -35,6 +35,7 @@ Los tres principios del proyecto:
 | ![Login](docs/screenshots/01-login.png) **Login** | ![Sin información](docs/screenshots/03-asistente-sin-informacion.png) **«No tengo información»** (y se guarda la pregunta) |
 | ![Artículos](docs/screenshots/04-articulos.png) **Artículos por categoría** | ![Detalle](docs/screenshots/05-articulo-detalle.png) **Detalle**, con la sección citada resaltada |
 | ![Editor](docs/screenshots/06-editor-formulario.png) **Editor** (solo rol editor) | ![Preguntas](docs/screenshots/07-preguntas-sin-respuesta.png) **Preguntas sin respuesta**, agrupadas |
+| ![Valoraciones](docs/screenshots/09-valoraciones.png) **Valoraciones** de las respuestas (solo editor) | |
 
 <p align="center"><img src="docs/screenshots/08-movil-asistente.png" alt="Versión móvil" width="260"><br>Responsive (390 px)</p>
 
@@ -59,6 +60,7 @@ npm install
    2. `20261004000002_rls.sql` (RLS y privilegios)
    3. `20261004000003_search.sql` (búsqueda y registro de preguntas sin respuesta)
    4. `20261004000004_save_article.sql` (guardado atómico de artículos)
+   5. `20261004000005_answer_feedback.sql` (valoración «¿Te sirvió?» de las respuestas)
 3. **Project Settings → API Keys:** copia la clave **pública** (anon / publishable) y la **service role** (secreta).
 
 ### 3. Variables de entorno
@@ -93,7 +95,7 @@ hayas elegido y **no uses nunca contraseñas reales**.
 
 | Comando | Qué hace |
 |---|---|
-| `npm test` | Todas las pruebas (298, incluida una auditoría de accesibilidad con axe-core), sin necesidad de credenciales |
+| `npm test` | Todas las pruebas (331, incluida una auditoría de accesibilidad con axe-core), sin necesidad de credenciales |
 | `npm run reliability` | Mide la fiabilidad del asistente con 41 preguntas y muestra el porcentaje de aciertos |
 | `npm run security` | Tests de seguridad: cabeceras, secretos y arnés de intrusión |
 | `npm run reliability:live` | Lo mismo que `reliability`, contra **tu** Supabase real |
@@ -165,7 +167,7 @@ src/
   lib/         cliente de Supabase, datos, utilidades
   pages/       pantallas
 supabase/
-  migrations/  esquema, RLS, búsqueda, save_article
+  migrations/  esquema, RLS, búsqueda, save_article, valoraciones
   seed/        21 artículos ficticios y tests de contenido
   reliability/ 41 preguntas de prueba y evaluador
   tests/       tests de SQL y RLS sobre Postgres real
@@ -194,5 +196,5 @@ docs/          guía de prompt injection y capturas
 
 ## Mejoras propuestas
 
-Tabla de sinónimos gestionable por el editor, tolerancia a erratas, historial de cambios, conectar un LLM
+Tabla de sinónimos gestionable por el editor, tolerancia a erratas, usar las valoraciones para medir la fiabilidad con uso real, historial de cambios, conectar un LLM
 siguiendo `docs/PROMPT-INJECTION.md`, y ampliar el conjunto de preguntas con casos reales del equipo.
