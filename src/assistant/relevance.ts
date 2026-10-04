@@ -41,15 +41,62 @@ export function isWeakMatch(chunk: RetrievedChunk): boolean {
 export interface Gate {
   minScore: number
   minMatchedWeight: number
+  /** Activa la vía de "coincidencia completa" para consultas cortas y precisas (ver isCompleteMatch). */
+  completeMatch: boolean
 }
 
-export const DEFAULT_GATE: Gate = { minScore: MIN_SCORE, minMatchedWeight: MIN_MATCHED_WEIGHT }
+export const DEFAULT_GATE: Gate = { minScore: MIN_SCORE, minMatchedWeight: MIN_MATCHED_WEIGHT, completeMatch: true }
 
-export function isRelevant(chunk: RetrievedChunk, gate: Gate = DEFAULT_GATE): boolean {
+/**
+ * "Coincidencia completa": segunda vía para consultas CORTAS y PRECISAS como "el reloj no carga".
+ *
+ * Una consulta así coincide al 100 % con el título de un artículo, pero tiene pocas palabras y por eso suma poca
+ * evidencia absoluta: el umbral general (MIN_MATCHED_WEIGHT) la rechazaba. En las pruebas de consultas cortas, 5 de
+ * las 6 que no encontraba tenían puntuación 1,00 y el artículo correcto en primer lugar.
+ *
+ * Para no reabrir las respuestas inventadas, se exige TODO esto a la vez:
+ *  - todos los términos significativos de la pregunta coinciden (y no es una consulta vacía);
+ *  - son al menos 2 (una palabra suelta, "reloj" o "SOS", sigue rechazada);
+ *  - puntuación ≥ 0,9, es decir, coinciden en el título;
+ *  - una evidencia mínima baja, solo para descartar combinaciones triviales;
+ *  - SIN EMPATE: el siguiente artículo queda al menos 0,1 por debajo. Si dos artículos coinciden igual de bien,
+ *    no hay forma de saber cuál es (p. ej. "el SOS no llama" empata con "nadie contesta el SOS") y no se responde.
+ */
+export const COMPLETE_MATCH = { minScore: 0.9, minTerms: 2, minWeight: 2.0, minMargin: 0.1 } as const
+
+export function isCompleteMatch(chunk: RetrievedChunk, next?: RetrievedChunk): boolean {
+  return (
+    chunk.queryTerms >= COMPLETE_MATCH.minTerms &&
+    chunk.matchedTerms === chunk.queryTerms &&
+    chunk.score >= COMPLETE_MATCH.minScore &&
+    chunk.matchedWeight >= COMPLETE_MATCH.minWeight &&
+    // 1e-9: tolerancia de coma flotante (1 - 0,9 da 0,0999…), para que un margen exacto de 0,1 cuente.
+    (next === undefined || chunk.score - next.score >= COMPLETE_MATCH.minMargin - 1e-9)
+  )
+}
+
+/** Vía general: puntuación y evidencia suficientes. */
+export function passesGeneralGate(chunk: RetrievedChunk, gate: Gate = DEFAULT_GATE): boolean {
   return chunk.score >= gate.minScore && chunk.matchedWeight >= gate.minMatchedWeight
 }
 
-/** Fragmentos que superan el umbral, de más a menos relevante. */
+/**
+ * ¿Es relevante este fragmento SI ES EL PRIMER RESULTADO? (`next` es el segundo). Para varios resultados, usa
+ * selectRelevant: la vía de coincidencia completa solo puede aplicarse al primero.
+ */
+export function isRelevant(chunk: RetrievedChunk, gate: Gate = DEFAULT_GATE, next?: RetrievedChunk): boolean {
+  return passesGeneralGate(chunk, gate) || (gate.completeMatch && isCompleteMatch(chunk, next))
+}
+
+/**
+ * Fragmentos que superan el umbral, de más a menos relevante. `chunks` debe venir ordenado de más a menos
+ * relevante (como lo devuelve la base de datos).
+ *
+ * La coincidencia completa se aplica SOLO al primer resultado y comparándolo con el segundo: en un empate, el
+ * segundo también "coincidiría al 100 %" y, sin esta restricción, se colaría como si no tuviera rival.
+ */
 export function selectRelevant(chunks: RetrievedChunk[], gate: Gate = DEFAULT_GATE): RetrievedChunk[] {
-  return chunks.filter((c) => isRelevant(c, gate)).sort((a, b) => b.score - a.score)
+  return chunks
+    .filter((c, i) => passesGeneralGate(c, gate) || (gate.completeMatch && i === 0 && isCompleteMatch(c, chunks[1])))
+    .sort((a, b) => b.score - a.score)
 }

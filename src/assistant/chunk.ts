@@ -25,5 +25,8 @@ export function parseChunk(row: unknown): RetrievedChunk {
     steps: r.steps,
     score: r.score,
     matchedWeight: r.matched_weight,
+    // Opcionales: si la migración 6 aún no está aplicada, valen 0 y la "coincidencia completa" no se activa.
+    matchedTerms: isNumber(r.matched_terms) ? r.matched_terms : 0,
+    queryTerms: isNumber(r.query_terms) ? r.query_terms : 0,
   }
 }

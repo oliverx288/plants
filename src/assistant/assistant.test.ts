@@ -4,7 +4,9 @@ import { ask } from './ask'
 import type { AssistantDeps } from './ask'
 import { ExtractiveAnswerGenerator } from './generator'
 import { normalizeQuestion } from './question'
-import { MIN_MATCHED_WEIGHT, MIN_SCORE, WEAK_MATCH_SCORE, isRelevant, isWeakMatch, selectRelevant } from './relevance'
+import {
+  COMPLETE_MATCH, DEFAULT_GATE, MIN_MATCHED_WEIGHT, MIN_SCORE, WEAK_MATCH_SCORE, isCompleteMatch, isRelevant, isWeakMatch, selectRelevant,
+} from './relevance'
 import { parseChunk } from './chunk'
 import type { AnswerGenerator, RetrievedChunk } from './types'
 
@@ -19,6 +21,8 @@ const chunk = (over: Partial<RetrievedChunk> = {}): RetrievedChunk => ({
   steps: ['Activa el GPS', 'Revisa la suscripción'],
   score: 0.8,
   matchedWeight: 5,
+  matchedTerms: 3,
+  queryTerms: 4, // por defecto NO es una coincidencia completa (3 de 4 términos)
   ...over,
 })
 
@@ -43,6 +47,77 @@ describe('umbral de relevancia', () => {
       chunk({ articleId: 'alto', score: 0.9 }),
     ])
     expect(picked.map((c) => c.articleId)).toEqual(['alto', 'medio'])
+  })
+})
+
+describe('coincidencia completa (consultas cortas y precisas)', () => {
+  // "el reloj no carga": las 2 palabras significativas coinciden en el título, pero la evidencia es baja (2,9)
+  const complete = (over: Partial<RetrievedChunk> = {}) =>
+    chunk({ score: 1, matchedWeight: 2.9, matchedTerms: 2, queryTerms: 2, ...over })
+  // El siguiente resultado, claramente peor (no pasa ni la vía general): hay margen de sobra.
+  const nextOk = chunk({ articleId: 'otro', score: 0.5, matchedWeight: 1 })
+
+  it('se acepta aunque la evidencia sea menor que el umbral general', () => {
+    expect(complete().matchedWeight).toBeLessThan(MIN_MATCHED_WEIGHT)
+    expect(isCompleteMatch(complete(), nextOk)).toBe(true)
+    expect(isRelevant(complete(), DEFAULT_GATE, nextOk)).toBe(true)
+    expect(selectRelevant([complete(), nextOk])).toHaveLength(1)
+  })
+
+  it('NO se acepta una palabra suelta, aunque coincida al 100 % ("reloj", "SOS")', () => {
+    expect(isCompleteMatch(complete({ matchedTerms: 1, queryTerms: 1, matchedWeight: 0.8 }), nextOk)).toBe(false)
+    expect(isCompleteMatch(complete({ matchedTerms: 1, queryTerms: 1, matchedWeight: 3 }), nextOk)).toBe(false)
+  })
+
+  it('NO se acepta si falta alguna palabra de la pregunta por coincidir', () => {
+    expect(isCompleteMatch(complete({ matchedTerms: 2, queryTerms: 3 }), nextOk)).toBe(false)
+  })
+
+  // Los límites se fijan con VALORES LITERALES (no con la constante): así cambiar la política obliga a cambiar el test.
+  it('la política tiene los valores acordados', () => {
+    expect(COMPLETE_MATCH).toEqual({ minScore: 0.9, minTerms: 2, minWeight: 2.0, minMargin: 0.1 })
+  })
+
+  it('NO se acepta si no coincide en el título (puntuación < 0,9)', () => {
+    expect(isCompleteMatch(complete({ score: 0.89 }), nextOk)).toBe(false)
+    expect(isCompleteMatch(complete({ score: 0.9 }), nextOk)).toBe(true)
+  })
+
+  it('NO se acepta con evidencia trivial (combinación de palabras muy comunes)', () => {
+    expect(isCompleteMatch(complete({ matchedWeight: 0 }), nextOk)).toBe(false)
+    expect(isCompleteMatch(complete({ matchedWeight: 1.9 }), nextOk)).toBe(false)
+    expect(isCompleteMatch(complete({ matchedWeight: 2.0 }), nextOk)).toBe(true)
+  })
+
+  it('NO se acepta si hay EMPATE con otro artículo ("el SOS no llama" frente a "nadie contesta el SOS")', () => {
+    expect(isCompleteMatch(complete(), chunk({ score: 1 }))).toBe(false)
+    expect(isCompleteMatch(complete(), chunk({ score: 0.95 }))).toBe(false) // margen 0,05
+    expect(isCompleteMatch(complete(), chunk({ score: 0.91 }))).toBe(false) // margen 0,09
+    expect(isCompleteMatch(complete(), chunk({ score: 0.9 }))).toBe(true) // margen exacto 0,1 (1 - 0,9 = 0,0999… en coma flotante)
+    // Con un empate no se responde con NINGUNO de los dos (el segundo no puede colarse por no tener "siguiente").
+    expect(selectRelevant([complete(), chunk({ articleId: 'empate', score: 1, matchedWeight: 2.9, matchedTerms: 2, queryTerms: 2 })])).toEqual([])
+  })
+
+  it('solo se aplica al PRIMER resultado: el segundo no puede ser una coincidencia completa', () => {
+    const second = complete({ articleId: 'segundo', score: 0.95 })
+    expect(selectRelevant([chunk({ articleId: 'primero', score: 0.99, matchedWeight: 1, matchedTerms: 1, queryTerms: 3 }), second])).toEqual([])
+  })
+
+  it('sin siguiente resultado no hay empate posible', () => {
+    expect(isCompleteMatch(complete(), undefined)).toBe(true)
+  })
+
+  it('con la base de datos sin la migración 6 (términos = 0) la vía nueva no se activa', () => {
+    expect(isCompleteMatch(complete({ matchedTerms: 0, queryTerms: 0 }), nextOk)).toBe(false)
+  })
+
+  it('se puede desactivar en el umbral', () => {
+    expect(isRelevant(complete(), { ...DEFAULT_GATE, completeMatch: false }, nextOk)).toBe(false)
+  })
+
+  it('no ablanda la vía general: una pregunta que no es completa sigue necesitando la evidencia de siempre', () => {
+    expect(isRelevant(chunk({ score: 0.5, matchedWeight: 3.4 }), DEFAULT_GATE, nextOk)).toBe(false)
+    expect(isRelevant(chunk({ score: 0.5, matchedWeight: 3.5 }), DEFAULT_GATE, nextOk)).toBe(true)
   })
 })
 
@@ -90,6 +165,12 @@ describe('parseChunk', () => {
   }
   it('convierte una fila válida', () => {
     expect(parseChunk(row)).toMatchObject({ articleId: 'a1', score: 0.5, matchedWeight: 3, steps: ['a'] })
+  })
+  it('lee los términos que coinciden y los de la pregunta', () => {
+    expect(parseChunk({ ...row, matched_terms: 2, query_terms: 2 })).toMatchObject({ matchedTerms: 2, queryTerms: 2 })
+  })
+  it('si la base de datos aún no los devuelve (migración 6 sin aplicar) valen 0 y la app sigue funcionando', () => {
+    expect(parseChunk(row)).toMatchObject({ matchedTerms: 0, queryTerms: 0 })
   })
   it.each([[null], [{}], [{ ...row, score: '0.5' }], [{ ...row, steps: [1] }], [{ ...row, matched_weight: NaN }]])(
     'rechaza una forma inesperada: %j',

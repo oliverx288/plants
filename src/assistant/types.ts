@@ -12,6 +12,10 @@ export interface RetrievedChunk {
   score: number
   /** Peso absoluto de lo que casó: evita dar por buena una consulta con muy poca información. */
   matchedWeight: number
+  /** Nº de términos significativos de la pregunta que coinciden en el fragmento (0 si la base de datos no lo devuelve). */
+  matchedTerms: number
+  /** Nº de términos significativos que tiene la pregunta (0 si la base de datos no lo devuelve). */
+  queryTerms: number
 }
 
 /** Texto literal de una sección del artículo. */

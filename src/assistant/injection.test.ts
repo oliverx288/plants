@@ -20,7 +20,7 @@ const PAYLOADS = [
 
 const hostileChunk = (text: string): RetrievedChunk => ({
   articleId: 'a1', articleTitle: 'Artículo con contenido hostil', category: 'Pruebas', sectionId: 's1',
-  sectionPosition: 0, heading: text, body: text, steps: [text], score: 0.9, matchedWeight: 8,
+  sectionPosition: 0, heading: text, body: text, steps: [text], score: 0.9, matchedWeight: 8, matchedTerms: 3, queryTerms: 4,
 })
 
 describe('contenido de artículos con órdenes dentro (inyección indirecta)', () => {
