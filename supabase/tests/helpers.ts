@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { PGlite } from '@electric-sql/pglite'
+import { fuzzystrmatch } from '@electric-sql/pglite/contrib/fuzzystrmatch'
 import { unaccent } from '@electric-sql/pglite/contrib/unaccent'
 
 const MIGRATIONS_DIR = fileURLToPath(new URL('../migrations', import.meta.url))
@@ -12,7 +13,7 @@ const MIGRATIONS_DIR = fileURLToPath(new URL('../migrations', import.meta.url))
  * privilegios por defecto que Supabase concede en 'public') y aplica TODAS las migraciones.
  */
 export async function createTestDb(): Promise<PGlite> {
-  const db = new PGlite({ extensions: { unaccent } })
+  const db = new PGlite({ extensions: { unaccent, fuzzystrmatch } })
   await db.exec(`
     create role anon nologin;
     create role authenticated nologin;
