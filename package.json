@@ -13,7 +13,9 @@
     "test:db": "vitest run supabase/tests",
     "seed": "tsx --env-file=.env scripts/seed.ts",
     "reliability:live": "tsx --env-file=.env scripts/reliability-live.ts",
-    "reliability": "vitest run supabase/tests/reliability.test.ts --disable-console-intercept"
+    "reliability": "vitest run supabase/tests/reliability.test.ts --disable-console-intercept",
+    "security:live": "tsx --env-file=.env scripts/security-live.ts",
+    "security": "vitest run security"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
