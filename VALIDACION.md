@@ -111,7 +111,7 @@ cambiar de opinión). Como Nuria, abre «Valoraciones».
 | Comprobación | Resultado |
 |---|---|
 | Aplicar la migración `…_answer_feedback.sql` y valorar como Lucía: el botón aparece tras una respuesta y muestra «Gracias por tu valoración.» | ✅ Real |
-| Verlo como Nuria en «Valoraciones» | ⏳ Pendiente (no reportado todavía) |
+| Verlo como Nuria en «Valoraciones» (aparece y muestra las valoraciones de Lucía) | ✅ Real |
 | La valoración se guarda y se actualiza si cambia de opinión (no se duplica); el título del artículo lo pone el servidor; si el artículo se borra, la valoración se conserva | 🧪 Local (14 tests sobre Postgres real) |
 | El agente solo ve y cambia las suyas; no puede valorar a nombre de otra persona, cambiar la pregunta o el artículo, ni borrar; solo el editor ve todas | 🧪 Local (RLS; 5 mutaciones detectadas) |
 | Si falla el guardado se dice y **no** se marca como hecha; nunca se muestra el error crudo; las agrupadas ignoran mayúsculas y no mezclan positivas con negativas | 🧪 Local |
@@ -404,7 +404,7 @@ evidencia de que no se ha roto nada.
   respuestas.
 - **Sustituciones que cambian la raíz** (`notificasiones` no llega a coincidir con la raíz de «notificaciones»).
 
-⏳ Pendiente de verificar en tu Supabase real: aplicar la migración 7 y probar `no enciende`, `bateria`, `no carga`.
+✅ **Verificado en el Supabase real** (migración 7 aplicada sin errores; como Lucía): `no enciende`, `no carga`, `bateria` y `baterai` respondieron correctamente, según la autora. En `bateria`/`baterai` el resultado esperado es la lista de dos sugerencias (ver arriba). `npm run reliability:live` no se ha ejecutado todavía con el conjunto nuevo.
 
 **Lo que NO resuelve (a propósito).**
 - `no enciende` y `no tiene cobertura`: tras quitar palabras vacías solo queda **1** término, indistinguible de «reloj» a
