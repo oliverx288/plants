@@ -1,5 +1,7 @@
 # Faro · asistente de base de conocimiento para soporte técnico
 
+[![CI](https://github.com/oliverx288/plants/actions/workflows/ci.yml/badge.svg)](https://github.com/oliverx288/plants/actions/workflows/ci.yml)
+
 Proyecto de portfolio. **Faro** ayuda a un agente de soporte a resolver una llamada rápido: escribe la duda del
 cliente con sus palabras y recibe **los pasos a seguir y el artículo del que salen**, con enlace para
 comprobarlo en un clic. Si no hay información, lo dice y lo apunta para que el equipo de documentación sepa qué

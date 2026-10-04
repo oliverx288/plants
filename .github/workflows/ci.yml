@@ -1,0 +1,46 @@
+name: CI
+
+# Comprueba tipos, estilo, pruebas y compilación en cada push y pull request.
+# No necesita ningún secreto: las pruebas usan un Postgres en memoria (PGlite) y clientes simulados.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Tipos, lint, tests y build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias (respeta el package-lock.json)
+        run: npm ci
+
+      - name: Tipos (TypeScript)
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Pruebas (RLS, búsqueda, fiabilidad, seguridad, interfaz y accesibilidad)
+        run: npm test
+
+      - name: Compilar
+        run: npm run build
+        env:
+          # Claves de ejemplo: el build solo necesita que la pública sea realmente pública.
+          VITE_SUPABASE_URL: https://ejemplo.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_ejemplo
