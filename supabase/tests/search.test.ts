@@ -33,6 +33,8 @@ interface Hit {
   heading: string
   score: number
   matched_weight: number
+  matched_terms: number
+  query_terms: number
 }
 const search = async (actor: Actor, question: string | null, max?: number) =>
   (await as<Hit>(actor, 'select * from public.search_knowledge($1, $2)', [question, max ?? 3])).rows
@@ -108,6 +110,32 @@ describe('search_knowledge: recuperación', () => {
     expect((await search(LUCIA, 'reloj app llamada batería', 1)).length).toBe(1)
     expect((await search(LUCIA, 'reloj app llamada batería', 0)).length).toBe(1)
     expect((await search(LUCIA, 'reloj app llamada batería', 1000)).length).toBeLessThanOrEqual(10)
+  })
+})
+
+describe('search_knowledge: términos que coinciden (base de la coincidencia completa)', () => {
+  it('devuelve cuántos términos significativos tiene la pregunta y cuántos coinciden', async () => {
+    const [top] = await search(LUCIA, 'el reloj no carga') // palabras vacías ("el", "no") no cuentan
+    expect(top.article_title).toBe('El reloj no carga')
+    expect(top).toMatchObject({ query_terms: 2, matched_terms: 2 })
+  })
+
+  it('una palabra suelta cuenta 1 término; una pregunta con una palabra que no existe no coincide del todo', async () => {
+    const hits = await search(LUCIA, 'reloj')
+    expect(hits.length).toBeGreaterThan(0)
+    for (const hit of hits) expect(hit).toMatchObject({ query_terms: 1, matched_terms: 1 })
+    const [top] = await search(LUCIA, 'el reloj no carga idioma')
+    expect(top.query_terms).toBe(3)
+    expect(top.matched_terms).toBe(2) // "idioma" no está en ningún artículo
+  })
+
+  it('nunca coinciden más términos de los que tiene la pregunta', async () => {
+    for (const q of ['la batería dura poco', 'se apaga solo', 'cancelar suscripción', 'el reloj no envía la ubicación a la app del familiar']) {
+      for (const hit of await search(LUCIA, q, 10)) {
+        expect(hit.matched_terms, q).toBeGreaterThan(0)
+        expect(hit.matched_terms, q).toBeLessThanOrEqual(hit.query_terms)
+      }
+    }
   })
 })
 
