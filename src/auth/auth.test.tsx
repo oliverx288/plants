@@ -114,13 +114,14 @@ describe('rutas protegidas', () => {
     setup('/')
     expect(await screen.findByRole('heading', { name: 'Faro' })).toBeTruthy()
     expect(screen.getByLabelText('Correo electrónico')).toBeTruthy()
-    expect(screen.queryByText(/Has iniciado sesión/)).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'Asistente de soporte' })).toBeNull()
   })
 
   it('con sesión y perfil, muestra la app con nombre y rol', async () => {
     fake.state.session = fake.sessionFor('lucia@velia-demo.test')
     setup('/')
-    expect(await screen.findByRole('heading', { name: 'Hola, Lucía' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Asistente de soporte' })).toBeTruthy()
+    expect(screen.getByText('Lucía')).toBeTruthy()
     expect(screen.getByText('Agente')).toBeTruthy()
   })
 })
@@ -130,7 +131,7 @@ describe('login', () => {
     setup('/')
     await logIn('  LUCIA@Velia-Demo.test ', LUCIA.password)
 
-    expect(await screen.findByRole('heading', { name: 'Hola, Lucía' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Asistente de soporte' })).toBeTruthy()
     expect(fake.client.auth.signInWithPassword).toHaveBeenCalledWith({
       email: 'lucia@velia-demo.test',
       password: LUCIA.password,
@@ -186,7 +187,7 @@ describe('perfil y rol', () => {
     await logIn('intruso@velia-demo.test', 'clave-intruso-1')
 
     expect(await screen.findByText(/no tiene acceso a Faro/)).toBeTruthy()
-    expect(screen.queryByText(/Hola,/)).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'Asistente de soporte' })).toBeNull()
   })
 
   it('si falla la lectura del perfil, deniega el acceso', async () => {
@@ -194,7 +195,7 @@ describe('perfil y rol', () => {
     fake.state.session = fake.sessionFor('lucia@velia-demo.test')
     setup('/')
     expect(await screen.findByText(/No se pudo comprobar tu perfil/)).toBeTruthy()
-    expect(screen.queryByText(/Hola,/)).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'Asistente de soporte' })).toBeNull()
   })
 
   it('el rol sale de la base de datos, NO de user_metadata (que el usuario puede manipular)', async () => {
@@ -237,7 +238,8 @@ describe('cerrar sesión', () => {
     await user.click(await screen.findByRole('button', { name: 'Cerrar sesión' }))
     await logIn('lucia@velia-demo.test', LUCIA.password)
 
-    expect(await screen.findByRole('heading', { name: 'Hola, Lucía' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Asistente de soporte' })).toBeTruthy()
+    expect(screen.getByText('Lucía')).toBeTruthy()
     expect(screen.getByText('Agente')).toBeTruthy()
     expect(screen.queryByText('Editor')).toBeNull()
   })

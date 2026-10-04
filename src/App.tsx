@@ -4,7 +4,7 @@ import { RequireAuth } from './auth/RequireAuth'
 import { AppLayout } from './components/AppLayout'
 import { ArticlePage } from './pages/ArticlePage'
 import { ArticlesPage } from './pages/ArticlesPage'
-import { HomePage } from './pages/HomePage'
+import { AssistantPage } from './pages/AssistantPage'
 import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
@@ -15,7 +15,7 @@ export function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
-          <Route index element={<HomePage />} />
+          <Route index element={<AssistantPage />} />
           <Route path="articulos" element={<ArticlesPage />} />
           <Route path="articulos/:id" element={<ArticlePage />} />
         </Route>

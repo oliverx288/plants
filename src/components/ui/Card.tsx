@@ -1,6 +1,11 @@
-import type { HTMLAttributes } from 'react'
+import type { ElementType, HTMLAttributes } from 'react'
 import styles from './Card.module.css'
 
-export function Card({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={[styles.card, className].filter(Boolean).join(' ')} {...rest} />
+interface CardProps extends HTMLAttributes<HTMLElement> {
+  /** Etiqueta HTML semántica (por defecto div). */
+  as?: ElementType
+}
+
+export function Card({ as: Tag = 'div', className, ...rest }: CardProps) {
+  return <Tag className={[styles.card, className].filter(Boolean).join(' ')} {...rest} />
 }
