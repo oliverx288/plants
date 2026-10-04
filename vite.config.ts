@@ -1,7 +1,7 @@
 import { loadEnv } from 'vite'
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
-import { checkPublicKey } from './src/lib/publicKey'
+import { checkPublicKey } from './src/lib/publicKey.ts'
 
 export default defineConfig(({ mode }) => {
   // Si la clave "pública" es en realidad una service role, el build FALLA: así nunca llega a desplegarse
