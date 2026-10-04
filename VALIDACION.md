@@ -254,28 +254,31 @@ una protección (borrar, editar, ascender, leer preguntas, `save_article`, `fetc
 arnés marca FALLO exactamente en el intento correspondiente, y detecta incluso una API que «miente» diciendo
 «0 filas» cuando sí cambió algo.
 
-**Resultado en el Supabase real:** *(pegar aquí la salida de `npm run security:live`)*
+**Resultado en el Supabase real:** *(pegar aquí la salida de `npm run security:live`)*. Mientras tanto, **D4 y D5 de §3.4 ya son
+peticiones directas a `/rest/v1` con el token del agente contra el servidor real** y fallaron como debían.
 
 ```text
 ⏳ pendiente de ejecutar
 ```
 
-### 3.4 Desde la interfaz y las DevTools ⏳ Pendiente (manual)
-Hazlo **como Lucía (agente)** y anota el resultado real en la última columna.
+### 3.4 Desde la interfaz y las DevTools ✅ Real (hecho como Lucía, agente)
+Ejecutado por la autora contra su Supabase real. Todos los intentos fallaron como debían. *Única salvedad:* de D5 solo se
+reportó `DELETE`; el `PATCH` (editar) no se ha comprobado a mano contra el servidor real (sí lo cubren los tests de RLS y
+el arnés de §3.3).
 
 | # | Intento | Esperado | Resultado |
 |---|---|---|---|
 | U1 | Mirar «Artículos» y un artículo: ¿hay «Nuevo artículo» o «Editar artículo»? | No aparecen | ✅ Real (verificado en la fase 7) |
 | U2 | Mirar la cabecera: ¿hay «Preguntas sin respuesta»? | No aparece | ✅ Real (verificado en la fase 7) |
-| U3 | Escribir en la barra de direcciones `/articulos/nuevo` | «No tienes permiso para ver esta página»; sin formulario | ⏳ |
-| U4 | Escribir `/preguntas` | «No tienes permiso…» | ⏳ |
-| U5 | Escribir `/articulos/<id de un artículo>/editar` | «No tienes permiso…» | ⏳ |
-| D1 | **DevTools → Network:** al usar el asistente, comprobar que las peticiones llevan solo la clave pública (`apikey`) y el token de Lucía, y que ninguna contiene la service role | Solo clave pública | ⏳ |
-| D2 | **DevTools → Application → Local Storage:** abrir la sesión guardada y buscar la service role | No está (solo token de Lucía) | ⏳ |
-| D3 | **DevTools → Sources/búsqueda global (Ctrl+Shift+F):** buscar `service_role` y `SUPABASE_SERVICE_ROLE_KEY` en el JS cargado | Ningún secreto (solo el texto del mensaje de error) | ⏳ |
-| D4 | **DevTools → Consola:** `fetch` a la API con el token de Lucía para **crear un artículo** (snippet abajo) | HTTP 401/403, código `42501`, y el artículo no existe | ⏳ |
-| D5 | Repetir D4 con **`PATCH`** (editar) y **`DELETE`** (borrar) sobre un artículo | `[]` (0 filas) o error; el artículo sigue igual | ⏳ |
-| D6 | **Manipular el token:** cambiar un carácter del `access_token` y repetir una petición | HTTP 401 («JWT invalid») | ⏳ |
+| U3 | Escribir en la barra de direcciones `/articulos/nuevo` | «No tienes permiso para ver esta página»; sin formulario | ✅ «No tienes permiso para ver esta página» |
+| U4 | Escribir `/preguntas` | «No tienes permiso…» | ✅ «No tienes permiso para ver esta página» |
+| U5 | Escribir `/articulos/<id de un artículo>/editar` | «No tienes permiso…» | ✅ «No tienes permiso para ver esta página» |
+| D1 | **DevTools → Network:** al usar el asistente, comprobar que las peticiones llevan solo la clave pública (`apikey`) y el token de Lucía, y que ninguna contiene la service role | Solo clave pública | ✅ |
+| D2 | **DevTools → Application → Local Storage:** abrir la sesión guardada y buscar la service role | No está (solo token de Lucía) | ✅ Solo el `access_token` de Lucía; sin `service_role` |
+| D3 | **DevTools → Sources/búsqueda global (Ctrl+Shift+F):** buscar `service_role` y `SUPABASE_SERVICE_ROLE_KEY` en el JS cargado | Ningún secreto (solo el texto del mensaje de error) | ✅ Sin resultados para `service_role` en el JS cargado |
+| D4 | **DevTools → Consola:** `fetch` a la API con el token de Lucía para **crear un artículo** (snippet abajo) | HTTP 401/403, código `42501`, y el artículo no existe | ✅ **HTTP 403**, código `42501`, «new row violates row-level security policy» |
+| D5 | Repetir D4 con **`PATCH`** (editar) y **`DELETE`** (borrar) sobre un artículo | `[]` (0 filas) o error; el artículo sigue igual | ✅ `DELETE` → **HTTP 200 con array vacío** (0 filas); el artículo sigue intacto |
+| D6 | **Manipular el token:** cambiar un carácter del `access_token` y repetir una petición | HTTP 401 («JWT invalid») | ✅ **HTTP 401**, «Expected 3 parts in JWT» |
 
 **Snippet para la consola (D4)** — pégalo estando logueada como Lucía, con tu URL y tu clave **pública**:
 
@@ -306,7 +309,7 @@ la pregunta (propiedad que detectó una mutación que sobrevivía). El diseño p
 
 | Riesgo | Estado | Recomendación |
 |---|---|---|
-| Registro público abierto en Supabase Auth | Debe estar **desactivado** (paso de la guía de instalación) | Comprobarlo en Authentication → Sign In / Providers |
+| Registro público abierto en Supabase Auth | ✅ Comprobado **desactivado** por la autora | Mantenerlo así: con el registro abierto, cualquiera podría crear cuentas (sin perfil no ven nada, pero conviene no permitirlo) |
 | Sesión en `localStorage` | Aceptado | CSP estricta + nada de HTML sin sanear (ya aplicados) |
 | Sin MFA para la cuenta de editor | Pendiente | Activarlo si se usa en serio |
 | Sin historial de cambios de artículos | Pendiente | Tabla de auditoría (`articles_history`) |
