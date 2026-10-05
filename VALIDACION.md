@@ -9,7 +9,7 @@ cada cosa, porque no es lo mismo.
 | 🧪 **Local** | Comprobado con tests automáticos sobre un Postgres real en local (PGlite) o con un Supabase simulado. Fiable para la lógica y el SQL; no sustituye a una prueba real |
 | ⏳ **Pendiente** | Hay que ejecutarlo contra el Supabase real y pegar aquí el resultado (instrucciones incluidas) |
 
-Pruebas automáticas: **399 tests en 25 archivos**, todos en verde (`npm test`), más typecheck y lint limpios.
+Pruebas automáticas: **450 tests en 29 archivos**, todos en verde (`npm test`), más typecheck y lint limpios.
 Cada bloque de tests se validó además con **pruebas de mutación**: se rompió el código a propósito y se
 comprobó que algún test fallaba. Las mutaciones que sobrevivieron se anotan donde corresponde.
 
@@ -148,6 +148,59 @@ contraste con axe en un navegador de la autora. axe detecta de forma automática
 de accesibilidad.
 
 ---
+
+### 1.8 Importar un PDF como artículo (editor)
+
+**Historia de usuario.** Como Nuria, subo un PDF y Faro extrae su texto y propone un artículo con sus secciones y pasos; lo
+reviso y lo creo, y Lucía ya puede consultarlo desde el asistente.
+
+**Flujo (y una decisión que cambia el flujo pedido):**
+1. Nuria entra en *Artículos → Importar PDF* y elige el archivo. Se lee **en su navegador** (pdf.js): el PDF no se sube a ningún servidor.
+2. Se extrae el texto con su tamaño de letra y posición.
+3. Una función pura lo divide en título, secciones, texto y pasos.
+4. **Se muestra como BORRADOR en el formulario de siempre; no se crea solo.** Nuria elige la categoría (obligatoria), corrige lo que
+   haga falta y pulsa «Crear artículo», que pasa por `save_article` (misma validación, misma RLS).
+5. Lucía lo encuentra con el asistente.
+
+*Por qué un borrador y no publicar directamente:* un PDF no dice «esto es un título»; solo tiene texto con un tamaño y una posición.
+La división es una **heurística** y se equivoca (probado: encabezados de varias líneas, PDFs de tamaño uniforme…). Publicarla sin
+mirar contradice el objetivo del proyecto (que lo que dice el asistente sea fiable) y costaría un clic.
+
+**Cómo divide el texto:** título = el texto más grande de la primera página (si no, el nombre del archivo); encabezado = línea corta
+con letra mayor que el cuerpo (o «1. Título» / MAYÚSCULAS si todo es del mismo tamaño); pasos = viñetas (•, -, –, *) o numeración
+(«1.», «2)», «Paso 3:»); se descartan números de página y cabeceras/pies repetidos; se unen palabras partidas con guion. Todo
+respeta los límites de la base de datos: lo que no cabe se reparte en secciones «(continuación)» y, si es demasiado, se corta **y se avisa**.
+
+**Cómo probarlo (en tu app):** como Nuria, *Artículos → Importar PDF*, sube un PDF con texto, elige categoría y crea el artículo;
+como Lucía, pregúntale algo que contenga. Prueba también un archivo que no sea PDF y un PDF escaneado.
+
+| Prueba | Resultado |
+|---|---|
+| 36 tests de la división (pura): título, secciones, pasos, límites, cabeceras/pies, guiones, casos degenerados | ✅ Automática |
+| 7 mutaciones sobre la heurística (hueco de párrafo, cabeceras, tamaño de encabezado, recorte de pasos y de secciones, guiones, líneas largas) | ✅ las 7 hacen fallar un test (una sobrevivió y se añadió un test) |
+| Extracción con **pdf.js sobre PDFs reales** generados en los tests (acentos, ñ, dos páginas) | ✅ Automática |
+| Rechazos con mensaje claro: vacío, no-PDF (se mira el contenido, no la extensión), > 10 MB, > 50 páginas, dañado, escaneado | ✅ Automática |
+| **De punta a punta sobre Postgres real:** PDF → borrador → `save_article` como Nuria → Lucía pregunta y obtiene los pasos con su fuente | ✅ Automática |
+| Una agente con el borrador **no puede** crear el artículo (la base de datos lo rechaza) | ✅ Automática |
+| Un PDF con `<script>` e instrucciones hostiles se guarda como texto literal | ✅ Automática |
+| Pantalla: botón solo para el editor, ruta bloqueada para el agente, borrador, categoría obligatoria, error legible, descartar, axe | ✅ Automática (9 tests) |
+| Navegador real (Chromium) con la **CSP estricta**: el worker de pdf.js carga, se importa un PDF, 0 violaciones de CSP, 0 errores de consola, axe con contraste = 0 | ✅ Con datos simulados |
+| Importar un PDF tuyo en tu Supabase real | ⏳ Pendiente |
+
+**Seguridad.** (1) El PDF es un archivo no fiable: se comprueba su **contenido** (`%PDF-`), tamaño y páginas antes de procesarlo, y pdf.js se
+usa sin `eval` (`isEvalSupported: false`; v6, posterior a la CVE-2024-4367) ni XFA. (2) Se lee en el navegador de la editora, no en un
+servidor. (3) No hay superficie nueva en la base de datos: sin migración, sin Storage, sin función nueva; solo `save_article` (solo editor, RLS).
+(4) El texto se guarda y se muestra como texto, nunca como HTML. (5) Si algún día se conecta un LLM, el contenido importado entra
+en la base de conocimiento como cualquier otro: ver `docs/PROMPT-INJECTION.md` (la revisión humana del borrador es un control más).
+
+**Limitaciones (reales):**
+- **No hace OCR:** un PDF escaneado se rechaza con un mensaje que lo explica.
+- La división es heurística: PDFs con columnas, tablas o diseños complejos salen peor (el texto de dos columnas puede mezclarse).
+  Por eso se revisa. No se ha medido con PDFs reales de Velia; solo con los generados en los tests.
+- No detecta negritas (solo tamaño de letra): un PDF cuyos encabezados solo son negrita sale sin encabezados (avisa y deja una sección).
+- Las **imágenes y tablas** se ignoran; el PDF original **no se guarda** (solo el texto revisado).
+- Un artículo admite 15 secciones; un PDF que dé más se corta y avisa.
+- Cada importación crea un artículo nuevo: no detecta duplicados ni actualiza uno existente.
 
 ### 1.x Rediseño visual (estilo Stripe)
 

@@ -138,6 +138,16 @@ Se añaden como artículos de prueba o preguntas, y se comprueba el **comportami
 | HTML/script en la salida | El modelo devuelve `<img onerror=…>` | Se muestra como texto; la CSP bloquearía cualquier ejecución |
 | Coste | Pregunta de 10 000 caracteres | Rechazada por longitud antes de llegar al modelo |
 
+## 6 bis. Contenido importado desde PDF
+
+Desde la importación de PDFs (VALIDACION.md §1.8), parte del contenido de la base de conocimiento procede de archivos subidos por
+la editora, no escritos por ella. Eso no abre un canal nuevo (un editor ya puede escribir cualquier texto), pero sí **facilita
+que entre texto que ella no ha leído con atención**, por ejemplo instrucciones ocultas en un PDF (texto blanco, letra minúscula).
+Controles: (1) el PDF solo produce un **borrador** que la editora ve entero antes de crearlo; (2) el texto se guarda y se muestra
+como texto, nunca como HTML; (3) si se conecta un LLM, el contenido de los artículos se trata como DATOS (secciones 3–5) y no como
+instrucciones, venga de donde venga. Límite: el texto invisible solo se vería si la editora lo ve en pantalla; por eso el
+borrador enseña **todo** lo extraído.
+
 ## 7. Límites honestos
 
 - **Ninguna defensa a nivel de prompt es absoluta.** Por eso lo fiable son los controles *fuera* del modelo:

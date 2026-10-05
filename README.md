@@ -36,6 +36,7 @@ Los tres principios del proyecto:
 | ![Artículos](docs/screenshots/04-articulos.png) **Artículos por categoría** | ![Detalle](docs/screenshots/05-articulo-detalle.png) **Detalle**, con la sección citada resaltada |
 | ![Editor](docs/screenshots/06-editor-formulario.png) **Editor** (solo rol editor) | ![Preguntas](docs/screenshots/07-preguntas-sin-respuesta.png) **Preguntas sin respuesta**, agrupadas |
 | ![Valoraciones](docs/screenshots/09-valoraciones.png) **Valoraciones** de las respuestas (solo editor) | ![Coincidencia débil](docs/screenshots/10-coincidencia-debil.png) **Aviso de coincidencia débil** |
+| ![Importar PDF](docs/screenshots/11-importar-pdf.png) **Importar PDF** (solo editor): borrador para revisar | |
 
 <p align="center"><img src="docs/screenshots/08-movil-asistente.png" alt="Versión móvil" width="260"><br>Responsive (390 px)</p>
 
@@ -97,7 +98,7 @@ hayas elegido y **no uses nunca contraseñas reales**.
 
 | Comando | Qué hace |
 |---|---|
-| `npm test` | Todas las pruebas (399, incluida una auditoría de accesibilidad con axe-core), sin necesidad de credenciales |
+| `npm test` | Todas las pruebas (450, incluida una auditoría de accesibilidad con axe-core), sin necesidad de credenciales |
 | `npm run reliability` | Mide la fiabilidad del asistente con 41 preguntas y muestra el porcentaje de aciertos |
 | `npm run security` | Tests de seguridad: cabeceras, secretos y arnés de intrusión |
 | `npm run reliability:live` | Lo mismo que `reliability`, contra **tu** Supabase real |
@@ -172,6 +173,7 @@ Las pruebas y sus resultados están en [`VALIDACION.md`](VALIDACION.md).
 | **Funciones `SECURITY INVOKER`** | RLS sigue aplicando en la búsqueda y el guardado; evita `SECURITY DEFINER` y sus riesgos |
 | **Comprobar filas afectadas** al borrar/actualizar | RLS bloquea con «0 filas», no con un error: sin comprobarlo se mostraría «borrado» sin serlo |
 | **CSS puro con tokens** + CSS Modules | Sistema de diseño explícito y sin dependencias; contrastes WCAG AA medidos. Estilo limpio inspirado en Stripe (fondo `#F6F9FC`, acento violeta `#635BFF`) |
+| **pdf.js** (`pdfjs-dist`) | Importar PDFs: extrae el texto **en el navegador** (el archivo no se sube a ningún servidor). Se carga solo al entrar en «Importar PDF» y su worker se sirve desde el propio dominio, así que cumple la CSP |
 | **Inter autoalojada** (`@fontsource-variable/inter`) | La CSP solo permite fuentes del propio dominio, así que no se carga desde Google Fonts: la fuente va en el bundle (y no se envía la IP del usuario a un tercero) |
 | **Tests con Postgres real (PGlite)** | Verifican RLS y SQL de verdad, no con simulaciones |
 | **Conjunto de test retenido** | Para saber si una mejora generaliza o solo memoriza el conjunto de desarrollo |
