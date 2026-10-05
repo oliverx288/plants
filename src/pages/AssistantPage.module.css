@@ -1,18 +1,68 @@
-.intro {
-  color: var(--color-text-muted);
-  font-size: var(--text-lg);
-  margin-bottom: var(--space-6);
-  max-width: 44rem;
+/* Cabecera: título grande y con peso; descripción pequeña y en gris suave (muted: 4,6:1 sobre el fondo, AA). */
+.title {
+  margin-bottom: var(--space-3);
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
 }
 
+.intro {
+  max-width: 36rem;
+  margin-bottom: var(--space-7);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+/* Formulario: una tarjeta propia, con más aire dentro y entre sus elementos. */
 .form {
   max-width: 46rem;
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Etiqueta y campo (los estilos base están en ui/Field; el selector con tipo supera su especificidad). */
+.form label {
+  font-size: var(--text-lg);
+}
+.form textarea {
+  min-height: 11rem;
+  padding: var(--space-5);
+  font-size: var(--text-lg);
+  line-height: 1.6;
+  border-radius: var(--radius-lg);
 }
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-5);
+  margin-top: var(--space-2);
+}
+
+/* Botón principal: más grande, con relieve y un brillo violeta. */
+.actions button {
+  min-height: 3.5rem;
+  padding: var(--space-3) var(--space-7);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, #6c64ff, var(--color-brand-600));
+  box-shadow: 0 10px 22px -8px rgb(99 91 255 / 0.65), var(--shadow-sm);
+  transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+}
+.actions button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #5f57f0, var(--color-brand-700));
+  box-shadow: 0 14px 26px -8px rgb(99 91 255 / 0.75), var(--shadow-sm);
+  transform: translateY(-1px);
+}
+.actions button:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .counter {
@@ -23,10 +73,10 @@
 /* Conversación: la duda a la derecha (burbuja violeta) y la respuesta a la izquierda (gris claro). */
 .results {
   max-width: 46rem;
-  margin-top: var(--space-6);
+  margin-top: var(--space-7);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 .asked {

@@ -114,7 +114,7 @@ export function AssistantPage() {
 
   return (
     <>
-      <h1>Asistente de soporte</h1>
+      <h1 className={styles.title}>Asistente de soporte</h1>
       <p className={styles.intro}>
         Escribe la duda del cliente con tus palabras. Recibirás los pasos del artículo del que salen.
       </p>
