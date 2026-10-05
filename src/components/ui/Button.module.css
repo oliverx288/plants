@@ -3,13 +3,13 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  min-height: var(--target-min);
+  min-height: var(--control-height);
   padding: var(--space-2) var(--space-5);
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   font-weight: var(--weight-semibold);
   cursor: pointer;
-  transition: background-color var(--transition), border-color var(--transition);
+  transition: background-color var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 
 .button:disabled {
@@ -20,26 +20,31 @@
 .primary {
   background: var(--color-brand-600);
   color: #fff;
+  box-shadow: var(--shadow-sm);
 }
 .primary:hover:not(:disabled) {
   background: var(--color-brand-700);
+  box-shadow: var(--shadow-md);
 }
 
 .secondary {
   background: var(--color-surface);
   color: var(--color-brand-700);
-  border-color: var(--color-brand-600);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-sm);
 }
 .secondary:hover:not(:disabled) {
   background: var(--color-brand-50);
+  border-color: var(--color-brand-600);
 }
 
 .danger {
-  background: var(--color-danger-text);
+  background: var(--color-danger-solid);
   color: #fff;
+  box-shadow: var(--shadow-sm);
 }
 .danger:hover:not(:disabled) {
-  background: #701616;
+  background: var(--color-danger-solid-hover);
 }
 
 /* Cuando el botón es un enlace: sin subrayado y con el color del botón. */

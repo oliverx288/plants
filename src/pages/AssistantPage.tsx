@@ -43,7 +43,7 @@ function AnswerCard({ result, question }: { result: Extract<AskResult, { status:
           <h3>{section.heading}</h3>
           {section.body && <p className={styles.body}>{section.body}</p>}
           {section.steps.length > 0 && (
-            <ol className={styles.steps}>
+            <ol className={styles.steps} role="list">
               {section.steps.map((step, index) => (
                 <li key={index}>{step}</li>
               ))}

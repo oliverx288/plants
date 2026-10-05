@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useIsEditor } from '../auth/useIsEditor'
-import { Alert, Button, ButtonLink, Card, Spinner } from '../components/ui'
+import { Alert, Button, ButtonLink, Card, CategoryTag, Spinner } from '../components/ui'
 import { fetchArticles } from '../lib/articles'
 import { groupByCategory } from '../lib/categories'
 import { formatDate } from '../lib/format'
@@ -47,7 +47,9 @@ export function ArticlesPage() {
         <div className={styles.grid}>
           {groupByCategory(state.data).map((group) => (
             <Card key={group.category} className={styles.group}>
-              <h2 className={styles.category}>{group.category}</h2>
+              <h2 className={styles.category}>
+                <CategoryTag category={group.category} />
+              </h2>
               <ul className={styles.list}>
                 {group.items.map((article) => (
                   <li key={article.id}>

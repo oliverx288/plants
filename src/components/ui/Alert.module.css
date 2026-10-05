@@ -1,9 +1,11 @@
 .alert {
   display: flex;
   gap: var(--space-3);
-  padding: var(--space-4);
-  border: 2px solid;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid;
   border-radius: var(--radius-md);
+  /* franja de color a la izquierda, como acento */
+  box-shadow: inset 4px 0 0 var(--accent), var(--shadow-sm);
 }
 
 .icon {
@@ -18,7 +20,7 @@
   display: block;
 }
 
-.info { background: var(--color-info-bg); color: var(--color-info-text); border-color: var(--color-info-border); }
-.success { background: var(--color-success-bg); color: var(--color-success-text); border-color: var(--color-success-border); }
-.warning { background: var(--color-warning-bg); color: var(--color-warning-text); border-color: var(--color-warning-border); }
-.danger { background: var(--color-danger-bg); color: var(--color-danger-text); border-color: var(--color-danger-border); }
+.info { background: var(--color-info-bg); color: var(--color-info-text); border-color: var(--color-brand-200); --accent: var(--color-brand-600); }
+.success { background: var(--color-success-bg); color: var(--color-success-text); border-color: var(--color-success-border); --accent: var(--color-success-border); }
+.warning { background: var(--color-warning-bg); color: var(--color-warning-text); border-color: var(--color-warning-border); --accent: var(--color-warning-border); }
+.danger { background: var(--color-danger-bg); color: var(--color-danger-text); border-color: var(--color-danger-border); --accent: var(--color-danger-border); }

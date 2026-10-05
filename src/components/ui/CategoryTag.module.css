@@ -1,0 +1,16 @@
+.tag {
+  display: inline-block;
+  padding: 0.125rem var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+.violet { background: var(--tag-violet-bg); color: var(--tag-violet-text); }
+.green { background: var(--tag-green-bg); color: var(--tag-green-text); }
+.amber { background: var(--tag-amber-bg); color: var(--tag-amber-text); }
+.blue { background: var(--tag-blue-bg); color: var(--tag-blue-text); }
+.pink { background: var(--tag-pink-bg); color: var(--tag-pink-text); }
+.slate { background: var(--tag-slate-bg); color: var(--tag-slate-text); }

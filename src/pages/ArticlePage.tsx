@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { useIsEditor } from '../auth/useIsEditor'
-import { Alert, Badge, Button, ButtonLink, Spinner } from '../components/ui'
+import { Alert, Button, ButtonLink, CategoryTag, Spinner } from '../components/ui'
 import { fetchArticle } from '../lib/articles'
 import { formatDate } from '../lib/format'
 import { useAsyncData } from '../lib/useAsyncData'
@@ -64,7 +64,7 @@ export function ArticlePage() {
       </p>
       <h1>{article.title}</h1>
       <p className={styles.meta}>
-        <Badge>{article.category}</Badge>
+        <CategoryTag category={article.category} />
         <span>Última revisión: {formatDate(article.lastReviewedAt)}</span>
       </p>
       {isEditor && (
@@ -86,7 +86,7 @@ export function ArticlePage() {
           <h2>{section.heading}</h2>
           {section.body && <p className={styles.body}>{section.body}</p>}
           {section.steps.length > 0 && (
-            <ol className={styles.steps}>
+            <ol className={styles.steps} role="list">
               {section.steps.map((step, index) => (
                 <li key={index}>{step}</li>
               ))}

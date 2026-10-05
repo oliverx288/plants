@@ -1,6 +1,7 @@
 .intro {
   color: var(--color-text-muted);
-  margin-bottom: var(--space-5);
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-6);
   max-width: 44rem;
 }
 

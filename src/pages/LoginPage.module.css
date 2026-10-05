@@ -2,20 +2,44 @@
   display: grid;
   place-items: center;
   min-height: 100vh;
-  padding: var(--space-4);
+  padding: var(--space-5) var(--space-4);
+  background:
+    radial-gradient(60rem 28rem at 50% -8rem, rgb(99 91 255 / 0.13), transparent 70%),
+    var(--color-bg);
 }
 
 .card {
   width: 100%;
   max-width: 26rem;
+  padding: var(--space-7) var(--space-6);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
 }
 
+/* Logotipo grande: texto «Faro» con la marca (cuadrado violeta) encima, centrado. */
 .title {
-  margin-bottom: var(--space-1);
-  color: var(--color-brand-700);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+  font-size: 2.5rem;
+  text-align: center;
+  color: var(--color-text);
+}
+.title::before {
+  content: '';
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(circle at 50% 38%, #fff 0 0.42rem, transparent 0.43rem),
+    linear-gradient(135deg, #7a73ff, var(--color-brand-600) 55%, #4b44d6);
+  box-shadow: 0 8px 18px -6px rgb(99 91 255 / 0.55);
 }
 
 .subtitle {
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-6);
+  text-align: center;
   color: var(--color-text-muted);
 }

@@ -1,9 +1,10 @@
 .badge {
   display: inline-block;
-  padding: 0 var(--space-3);
-  background: var(--color-brand-100);
-  color: var(--color-brand-800);
-  border-radius: 999px;
+  padding: 0.125rem var(--space-3);
+  background: var(--color-brand-50);
+  color: var(--color-brand-700);
+  border-radius: var(--radius-pill);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
+  line-height: 1.5;
 }

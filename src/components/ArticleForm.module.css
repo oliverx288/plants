@@ -38,6 +38,7 @@
 .legend {
   font-size: var(--text-xl);
   font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
   padding: 0;
   margin-bottom: var(--space-2);
 }
