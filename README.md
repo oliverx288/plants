@@ -171,7 +171,8 @@ Las pruebas y sus resultados están en [`VALIDACION.md`](VALIDACION.md).
 | **`save_article` transaccional** | Crear/editar toca dos tablas; así no queda nada a medias si algo falla |
 | **Funciones `SECURITY INVOKER`** | RLS sigue aplicando en la búsqueda y el guardado; evita `SECURITY DEFINER` y sus riesgos |
 | **Comprobar filas afectadas** al borrar/actualizar | RLS bloquea con «0 filas», no con un error: sin comprobarlo se mostraría «borrado» sin serlo |
-| **CSS puro con tokens** + CSS Modules | Sistema de diseño explícito y sin dependencias; contrastes WCAG AA medidos |
+| **CSS puro con tokens** + CSS Modules | Sistema de diseño explícito y sin dependencias; contrastes WCAG AA medidos. Estilo limpio inspirado en Stripe (fondo `#F6F9FC`, acento violeta `#635BFF`) |
+| **Inter autoalojada** (`@fontsource-variable/inter`) | La CSP solo permite fuentes del propio dominio, así que no se carga desde Google Fonts: la fuente va en el bundle (y no se envía la IP del usuario a un tercero) |
 | **Tests con Postgres real (PGlite)** | Verifican RLS y SQL de verdad, no con simulaciones |
 | **Conjunto de test retenido** | Para saber si una mejora generaliza o solo memoriza el conjunto de desarrollo |
 

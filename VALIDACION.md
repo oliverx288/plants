@@ -149,6 +149,30 @@ de accesibilidad.
 
 ---
 
+### 1.x Rediseño visual (estilo Stripe)
+
+Cambio **solo visual**: ninguna lógica, consulta ni permiso se ha tocado. Verificado en navegador real (Chromium) con axe
+**incluido el contraste** (WCAG 2.2 AA): **0 violaciones en 12 vistas** (escritorio y móvil), **0 errores de CSP** y 0 px de
+desbordamiento horizontal; los 402 tests, typecheck, lint y build siguen en verde.
+
+Desviaciones deliberadas de la paleta pedida, por accesibilidad (medidas, no a ojo):
+
+| Pedido | Problema | Qué se hace |
+|---|---|---|
+| Éxito `#00D4AA` y error `#FF5A5A` como color | Sobre blanco dan 1,9:1 y 3,1:1 (AA exige 4,5:1 para texto) | Se usan como **acento** (franja, borde); el texto lleva `#0B6B57` / `#B42318` (5,9:1 / 5,8:1) |
+| Bordes `#E5E7EB` | 1,2:1: un campo de formulario casi no se vería (WCAG 1.4.11 pide 3:1) | Tarjetas y separadores usan `#E5E7EB`; **los campos y botones secundarios usan `#8792A2`** (3,2:1) |
+| Violeta `#635BFF` como texto/enlace | 4,7:1 sobre blanco, 4,45:1 sobre `#F6F9FC` (justo bajo AA) | Botones y círculos lo usan con texto blanco (4,7:1); el **texto** violeta usa `#4B44D6` (6,8:1) |
+| Texto secundario `#6B7280` sobre el gris de la burbuja de respuesta | 4,3:1 | Dentro de la respuesta se usa `#566070` (5,6:1) |
+| Fuente «Inter de Google Fonts» | La CSP del proyecto (`style-src`/`font-src 'self'`) la bloquearía | Inter **autoalojada** con `@fontsource-variable/inter` |
+
+Cambios de marcado inevitables para pedir lo que se pidió (sin lógica): navegación lateral con iconos SVG decorativos
+(`aria-hidden`), etiquetas de categoría con color estable por categoría (`CategoryTag`, con test) y `role="list"` en
+las listas de pasos (los círculos numerados usan contadores CSS y `list-style: none`, que algunos lectores de pantalla
+interpretan como «no es una lista»). En móvil la barra lateral pasa a cabecera superior.
+
+⏳ **Pendiente**: ver el resultado en la app real (las capturas de `docs/screenshots` se generan con una versión con
+datos simulados, como las anteriores) y probar con un lector de pantalla.
+
 ## 2. Pruebas de fiabilidad
 
 > ### ⚠️ Corrección importante (leer primero)
