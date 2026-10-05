@@ -23,8 +23,11 @@ export function ArticlesPage() {
       <h1>Artículos</h1>
       <p className={styles.intro}>Base de conocimiento de soporte, por categorías.</p>
       {isEditor && (
-        <p>
+        <p className={styles.actions}>
           <ButtonLink to="/articulos/nuevo">Nuevo artículo</ButtonLink>
+          <ButtonLink to="/articulos/importar" variant="secondary">
+            Importar PDF
+          </ButtonLink>
         </p>
       )}
 

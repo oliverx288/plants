@@ -1,0 +1,70 @@
+.intro {
+  max-width: 40rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-6);
+}
+
+.picker {
+  max-width: 48rem;
+}
+
+.label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+.hint {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Campo de archivo con aspecto de zona de carga. */
+.file {
+  display: block;
+  width: 100%;
+  padding: var(--space-5);
+  background: var(--color-brand-50);
+  color: var(--color-text);
+  border: 2px dashed var(--color-brand-600);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}
+.file::file-selector-button {
+  margin-right: var(--space-4);
+  min-height: var(--target-min);
+  padding: var(--space-2) var(--space-5);
+  background: var(--color-brand-600);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+.file:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.status {
+  max-width: 48rem;
+  margin: var(--space-5) 0;
+}
+
+.review {
+  margin-top: var(--space-7);
+  max-width: 48rem;
+}
+
+.warnings {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+}
+
+.form {
+  margin: var(--space-5) 0;
+}

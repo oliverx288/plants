@@ -100,10 +100,14 @@ const fake = vi.hoisted(() => {
 })
 
 vi.mock('../lib/supabase', () => ({ supabase: fake.client }))
+// La lectura real de un PDF se prueba en src/pdf; aquí se simula para probar la pantalla y el guardado.
+vi.mock('../pdf/importPdf', async (original) => ({ ...(await original<typeof import('../pdf/importPdf')>()), importPdf: vi.fn() }))
 
 import { AppRoutes } from '../App'
 import { AuthProvider } from '../auth/AuthProvider'
 import { a11yViolations } from '../test/axe'
+import { PdfImportError } from '../pdf/extract'
+import { importPdf } from '../pdf/importPdf'
 
 const ID_A = '10000000-0000-4000-8000-000000000001'
 const article = (id: string, title: string, category: string) => ({
@@ -515,5 +519,132 @@ describe('valoraciones de las respuestas (editor)', () => {
     open('/valoraciones')
     await screen.findByText('25 % de respuestas útiles')
     expect(await a11yViolations()).toEqual([])
+  })
+})
+
+describe('el editor importa un PDF', () => {
+  const imported = {
+    title: 'El reloj no carga',
+    sections: [
+      { heading: 'Qué ocurre', body: 'No aparece el icono de carga.', steps: [] },
+      { heading: 'Qué comprobar', body: '', steps: ['Usa el cable original.', 'Limpia los contactos.'] },
+    ],
+    warnings: ['No se han detectado encabezados: todo el texto está en una sola sección. Divídela como prefieras.'],
+  }
+  const pdf = (name = 'manual.pdf') => new File(['%PDF-1.4'], name, { type: 'application/pdf' })
+
+  it('el botón «Importar PDF» está en la lista de artículos solo para el editor', async () => {
+    open('/articulos')
+    expect(await screen.findByRole('link', { name: 'Importar PDF' })).toBeTruthy()
+    cleanup()
+    fake.state.role = 'agent'
+    open('/articulos')
+    await screen.findByRole('heading', { name: 'Artículos' })
+    expect(screen.queryByRole('link', { name: 'Importar PDF' })).toBeNull()
+  })
+
+  it('una agente que llega a la ruta a mano no ve la pantalla de importar (y la base de datos la rechazaría igual)', async () => {
+    fake.state.role = 'agent'
+    open('/articulos/importar')
+    expect(await screen.findByText('No tienes permiso para ver esta página')).toBeTruthy()
+    expect(screen.queryByLabelText('Archivo PDF')).toBeNull()
+  })
+
+  it('sube el PDF → aparece un BORRADOR con título, secciones y pasos, y NO se guarda nada todavía', async () => {
+    vi.mocked(importPdf).mockResolvedValue(imported)
+    open('/articulos/importar')
+    const user = userEvent.setup()
+    await user.upload(await screen.findByLabelText('Archivo PDF'), pdf())
+
+    expect(await screen.findByRole('heading', { name: 'Borrador de «manual.pdf»' })).toBeTruthy()
+    expect((screen.getByLabelText('Título') as HTMLInputElement).value).toBe('El reloj no carga')
+    expect((screen.getByLabelText('Encabezado de la sección 2') as HTMLInputElement).value).toBe('Qué comprobar')
+    expect((screen.getByLabelText('Pasos de la sección 2 (opcional)') as HTMLTextAreaElement).value).toBe('Usa el cable original.\nLimpia los contactos.')
+    // Los avisos de la extracción se muestran a la editora.
+    expect(screen.getByText(/No se han detectado encabezados/)).toBeTruthy()
+    expect(fake.state.saveCalls).toHaveLength(0)
+  })
+
+  it('la categoría es obligatoria: sin elegirla no se puede crear', async () => {
+    vi.mocked(importPdf).mockResolvedValue(imported)
+    open('/articulos/importar')
+    const user = userEvent.setup()
+    await user.upload(await screen.findByLabelText('Archivo PDF'), pdf())
+    await user.click(await screen.findByRole('button', { name: 'Crear artículo' }))
+
+    expect(await screen.findByText(/La categoría debe tener entre/)).toBeTruthy()
+    expect(fake.state.saveCalls).toHaveLength(0)
+  })
+
+  it('la editora corrige el borrador y lo crea: una sola llamada a save_article con lo que ve en pantalla', async () => {
+    vi.mocked(importPdf).mockResolvedValue(imported)
+    open('/articulos/importar')
+    const user = userEvent.setup()
+    await user.upload(await screen.findByLabelText('Archivo PDF'), pdf())
+    const title = await screen.findByLabelText('Título')
+    await user.clear(title)
+    await user.type(title, 'El reloj no carga bien')
+    await user.type(screen.getByLabelText('Categoría'), 'Batería y carga')
+    await user.click(screen.getByRole('button', { name: 'Crear artículo' }))
+
+    await waitFor(() => expect(fake.state.saveCalls).toHaveLength(1))
+    expect(fake.state.saveCalls[0]).toMatchObject({
+      p_id: null,
+      p_title: 'El reloj no carga bien',
+      p_category: 'Batería y carga',
+      p_sections: [
+        { heading: 'Qué ocurre', body: 'No aparece el icono de carga.', steps: [] },
+        { heading: 'Qué comprobar', body: '', steps: ['Usa el cable original.', 'Limpia los contactos.'] },
+      ],
+    })
+    // Va al artículo nuevo con el aviso de creación.
+    expect(await screen.findByText('Artículo creado a partir del PDF.')).toBeTruthy()
+  })
+
+  it('un PDF que no se puede leer muestra el motivo y no deja un borrador a medias', async () => {
+    vi.mocked(importPdf).mockRejectedValue(new PdfImportError('El PDF no contiene texto seleccionable (parece un documento escaneado).'))
+    open('/articulos/importar')
+    const user = userEvent.setup()
+    await user.upload(await screen.findByLabelText('Archivo PDF'), pdf('escaneado.pdf'))
+
+    expect(await screen.findByText('No se pudo importar el PDF')).toBeTruthy()
+    expect(screen.getByText(/parece un documento escaneado/)).toBeTruthy()
+    expect(screen.queryByLabelText('Título')).toBeNull()
+  })
+
+  it('un error inesperado nunca enseña detalles internos', async () => {
+    vi.mocked(importPdf).mockRejectedValue(new Error('TypeError: x is not a function at pdf.worker.mjs:123'))
+    open('/articulos/importar')
+    const user = userEvent.setup()
+    await user.upload(await screen.findByLabelText('Archivo PDF'), pdf())
+
+    expect(await screen.findByText('No se pudo leer el PDF. Inténtalo de nuevo.')).toBeTruthy()
+    expect(screen.queryByText(/pdf\.worker|TypeError/)).toBeNull()
+  })
+
+  it('«Descartar borrador» vuelve al principio sin guardar nada; un segundo PDF sustituye al primero', async () => {
+    vi.mocked(importPdf).mockResolvedValueOnce(imported).mockResolvedValueOnce({ ...imported, title: 'Otro artículo distinto' })
+    open('/articulos/importar')
+    const user = userEvent.setup()
+    await user.upload(await screen.findByLabelText('Archivo PDF'), pdf('uno.pdf'))
+    await screen.findByRole('heading', { name: 'Borrador de «uno.pdf»' })
+    await user.upload(screen.getByLabelText('Archivo PDF'), pdf('dos.pdf'))
+    await screen.findByRole('heading', { name: 'Borrador de «dos.pdf»' })
+    expect((screen.getByLabelText('Título') as HTMLInputElement).value).toBe('Otro artículo distinto')
+
+    await user.click(screen.getByRole('button', { name: 'Descartar borrador' }))
+    expect(screen.queryByLabelText('Título')).toBeNull()
+    expect(fake.state.saveCalls).toHaveLength(0)
+  })
+
+  it('accesibilidad: sin violaciones en la pantalla vacía y con un borrador', async () => {
+    vi.mocked(importPdf).mockResolvedValue(imported)
+    const { container } = open('/articulos/importar')
+    const user = userEvent.setup()
+    await screen.findByLabelText('Archivo PDF')
+    expect(await a11yViolations(container)).toEqual([])
+    await user.upload(screen.getByLabelText('Archivo PDF'), pdf())
+    await screen.findByRole('heading', { name: 'Borrador de «manual.pdf»' })
+    expect(await a11yViolations(container)).toEqual([])
   })
 })

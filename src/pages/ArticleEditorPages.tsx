@@ -11,7 +11,7 @@ import { useAsyncData } from '../lib/useAsyncData'
 import { isUuid } from '../lib/uuid'
 
 /** Categorías existentes para sugerirlas. Si no se pueden cargar, el formulario funciona igual sin sugerencias. */
-function useCategories(): string[] {
+export function useCategories(): string[] {
   const { state } = useAsyncData(fetchArticles)
   if (state.status !== 'ready') return []
   return [...new Set(state.data.map((a) => a.category))].sort((a, b) => a.localeCompare(b, 'es'))
