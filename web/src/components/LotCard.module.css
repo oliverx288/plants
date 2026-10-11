@@ -1,0 +1,13 @@
+.card { overflow: hidden; display: flex; flex-direction: column; }
+.top { position: relative; height: 8.6rem; display: flex; align-items: center; justify-content: center; }
+.cat { position: absolute; left: 1rem; top: 1rem; background: var(--superficie); }
+.body { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.8rem; flex: 1; }
+.name { font-size: 1.45rem; }
+.count { font-size: 1.5rem; }
+.need { margin-top: 0.7rem; font-weight: 700; }
+.price { background: var(--verde-suave); border-radius: 18px; padding: 0.8rem 1rem; }
+.priceBig { font-size: 1.8rem; color: var(--verde-oscuro); }
+.down { margin-top: 2px; font-weight: 700; color: var(--verde-oscuro); }
+.time { display: flex; gap: 0.5rem; align-items: center; font-weight: 700; }
+.cta { margin-top: auto; }
+.tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }

@@ -1,0 +1,21 @@
+.wrap { padding: 1rem var(--pad) 3rem; display: flex; flex-direction: column; gap: 1.3rem; }
+.wrap h1 { font-size: 2.1rem; line-height: 1.1; }
+.sub { margin-top: 6px; font-size: 1.05rem; }
+.filters { padding: 1.1rem; display: flex; flex-direction: column; gap: 1.1rem; }
+.chips { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.cat { display: inline-flex; align-items: center; gap: 0.55rem; min-height: 3.1rem; padding: 0 1.1rem 0 0.4rem; border-radius: 999px; border: 3px solid transparent; font-weight: 700; cursor: pointer; }
+.catOn { border-color: var(--texto); box-shadow: 0 3px 0 var(--texto); }
+.dot { width: 2.2rem; height: 2.2rem; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: var(--superficie); }
+.row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
+.row .fld { flex: 1 1 14rem; }
+.tgl { display: inline-flex; align-items: center; gap: 0.45rem; min-height: 3.1rem; padding: 0 1rem; border-radius: 999px; border: 2.5px solid var(--campo-borde); background: var(--superficie); font-weight: 700; color: var(--texto); cursor: pointer; }
+.tglOn { background: var(--cat-fruta); border-color: #8a6d00; color: #4a3b00; }
+.count { font-weight: 700; font-size: 1.1rem; }
+.grid { display: grid; gap: 1.3rem; }
+.empty { padding: 2rem 1.2rem; display: flex; flex-direction: column; gap: 0.7rem; align-items: center; text-align: center; }
+@media (min-width: 768px) {
+  .wrap { gap: 1.5rem; }
+  .wrap h1 { font-size: 2.6rem; }
+  .filters { padding: 1.4rem 1.5rem; }
+  .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.45rem; }
+}

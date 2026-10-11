@@ -1,0 +1,55 @@
+.back { padding: 0 var(--pad); }
+.back a { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 2.9rem; }
+.grid { padding: 0.4rem 0 2.5rem; display: grid; gap: 1.2rem; }
+.art { position: relative; height: 10.5rem; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.artC1 { position: absolute; width: 10rem; height: 10rem; border-radius: 999px; left: -3.3rem; bottom: -4rem; opacity: 0.8; }
+.artC2 { position: absolute; width: 7.7rem; height: 7.7rem; border-radius: 999px; background: var(--limon); right: -1.6rem; top: -1.6rem; }
+.artCat { position: absolute; left: 1rem; top: 1rem; background: var(--superficie); }
+.aside { margin: 0 var(--pad); padding: 1.2rem; display: flex; flex-direction: column; gap: 1.4rem; border: 3px solid #2e8b3e; }
+.head { display: flex; flex-direction: column; gap: 0.6rem; }
+.head h1 { font-size: 2.1rem; line-height: 1.05; }
+.count { font-size: 2.6rem; line-height: 0.95; color: var(--verde-oscuro); }
+.hint2 { margin-top: 2px; }
+.sec { display: flex; flex-direction: column; gap: 0.7rem; }
+.sec h2 { font-size: 1.35rem; }
+.tiers { display: flex; flex-direction: column; gap: 0.6rem; }
+.tier { border-radius: 18px; padding: 0.8rem 1rem; display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; background: var(--verde-claro); color: var(--verde-oscuro); }
+.tier { margin-left: calc(var(--i, 0) * 1rem); }
+.tierNow { background: var(--verde); color: #fff; }
+.nowTag { background: var(--limon); color: #3b2f00; font-size: 0.85rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.tierPrice { font-size: 1.6rem; line-height: 1; }
+.tier > span:first-child { white-space: nowrap; }
+.pickup { background: var(--cat-legumbre); border-radius: 22px; padding: 1rem; display: flex; gap: 0.9rem; align-items: center; color: #2e1f45; }
+.pickIcon { flex: none; width: 3.1rem; height: 3.1rem; border-radius: 16px; background: var(--berenjena); color: #fff; display: flex; align-items: center; justify-content: center; }
+.pickup h2 { font-size: 1rem; font-weight: 700; color: #45306a; }
+.pickup a { color: #45306a; padding: 0.6rem 0.2rem; }
+.cta { position: sticky; bottom: 0; z-index: 20; background: var(--superficie); margin: 0 -1.2rem -1.2rem; padding: 0.8rem 1.2rem 1.2rem; border-radius: 0 0 22px 22px; display: flex; flex-direction: column; gap: 0.8rem; }
+.desc { margin: 0 var(--pad); padding: 1.3rem; display: flex; flex-direction: column; gap: 0.8rem; }
+.desc h2 { font-size: 1.4rem; }
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
+.fact { background: var(--crema); border-radius: 18px; padding: 0.7rem; }
+.fact span { display: block; font-weight: 700; font-size: 0.9rem; }
+.fact strong { font-size: 1.1rem; }
+.producer { margin: 0 var(--pad); padding: 1.2rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+.pAv { flex: none; width: 4rem; height: 4rem; border-radius: 22px; background: var(--verde-hoja); color: #0e2a12; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+.pBody { flex: 1; min-width: 12rem; }
+.pBody h2 { font-size: 1.3rem; }
+.sorry { margin: 3rem var(--pad); padding: 2rem; text-align: center; display: flex; flex-direction: column; gap: 1rem; align-items: center; }
+
+@media (min-width: 768px) {
+  .back { padding: 0 var(--pad); }
+  .grid { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.15fr); gap: 1.5rem 2.2rem; padding: 0.7rem var(--pad) 3.5rem; align-items: start; grid-template-rows: auto auto 1fr; }
+  .art { height: 21rem; border-radius: 36px; grid-column: 1; }
+  .artC1 { width: 15.5rem; height: 15.5rem; left: -4.4rem; bottom: -6rem; }
+  .artC2 { width: 7.7rem; height: 7.7rem; }
+  .aside { grid-column: 2; grid-row: 1 / span 3; margin: 0; padding: 1.8rem; gap: 1.5rem; }
+  .head h1 { font-size: 2.6rem; }
+  .count { font-size: 3.2rem; }
+  .desc, .producer { margin: 0; grid-column: 1; }
+  .desc { padding: 1.55rem; }
+  .cta { position: static; margin: 0; padding: 0; background: none; border-radius: 0; }
+  .tiers { flex-direction: row; align-items: flex-end; gap: 0.6rem; height: 10.5rem; }
+  .tier { margin-left: 0; height: var(--h, 100%); flex: 1; flex-direction: column; align-items: flex-start; justify-content: flex-end; border-radius: 18px 18px 10px 10px; padding: 0.8rem; position: relative; gap: 0; }
+  .nowTag { position: absolute; top: -0.8rem; left: 0.7rem; }
+  .pickup { padding: 1.1rem 1.2rem; }
+}
