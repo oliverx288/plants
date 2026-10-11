@@ -17,7 +17,7 @@
 .head h1 { font-size: 1.9rem; }
 .filters { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; }
 .filters .fld { font-weight: 700; flex: 1 1 12rem; }
-.tableWrap { overflow-x: auto; }
+.tableWrap { overflow-x: auto; position: relative; }
 table { border-collapse: collapse; width: 100%; min-width: 40rem; }
 th { text-align: left; font-size: 0.9rem; font-weight: 700; color: #3b4636; padding: 0.7rem 0.9rem; border-bottom: 2.5px solid var(--arena); }
 td { padding: 0.8rem 0.9rem; border-bottom: 1.5px solid #f4ecdb; vertical-align: middle; }

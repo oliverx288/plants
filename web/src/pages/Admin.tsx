@@ -56,7 +56,7 @@ export default function Admin() {
       <RequireRole roles={['admin']}>
         <div className={styles.body}>
           <nav className={`${styles.side} on-dark`} aria-label="Administración">
-            <div className={styles.brand}><Link to="/" aria-label="Lot a Lot, ir al inicio" style={{ color: '#fff', textDecoration: 'none' }}><Logo /></Link><small>Administración</small></div>
+            <div className={styles.brand}><Link to="/" style={{ color: '#fff', textDecoration: 'none' }}><Logo /></Link><small>Administración</small></div>
             {SECS.map((s) => (
               <button key={s.id} type="button" className={`${styles.si} ${sec === s.id ? styles.siOn : ''}`} aria-current={sec === s.id ? 'page' : undefined}
                 onClick={() => { setSec(s.id); setDlg(null); setToast(''); setQ(''); setEstado('todos'); }}>

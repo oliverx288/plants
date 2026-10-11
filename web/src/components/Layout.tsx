@@ -61,7 +61,7 @@ export function Header() {
     <>
       <header className={styles.header}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link to={HOME_BY_ROLE[role === 'buyer' ? 'guest' : role === 'admin' ? 'guest' : role]} className={styles.logoLink} aria-label="Lot a Lot, ir al inicio">
+          <Link to={HOME_BY_ROLE[role === 'buyer' ? 'guest' : role === 'admin' ? 'guest' : role]} className={styles.logoLink}>
             <Logo />
           </Link>
           {producer && <span className={styles.badge}>Zona de productores</span>}

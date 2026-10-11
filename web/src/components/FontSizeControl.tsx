@@ -2,9 +2,9 @@ import { useStore, type FontSize } from '../state/store';
 import styles from './Layout.module.css';
 
 const SIZES: { v: FontSize; label: string; aria: string; px: number }[] = [
-  { v: 18, label: 'A', aria: 'Texto normal', px: 16 },
-  { v: 21, label: 'A+', aria: 'Texto grande', px: 20 },
-  { v: 24, label: 'A++', aria: 'Texto muy grande', px: 24 },
+  { v: 18, label: 'A', aria: 'A, texto normal', px: 16 },
+  { v: 21, label: 'A+', aria: 'A+, texto grande', px: 20 },
+  { v: 24, label: 'A++', aria: 'A++, texto muy grande', px: 24 },
 ];
 
 export function FontSizeControl({ label = 'Tamaño del texto:' }: { label?: string }) {
